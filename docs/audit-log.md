@@ -1,0 +1,31 @@
+# NHẬT KÝ KIỂM TOÁN VÀ ĐÁNH GIÁ (AUDIT LOG)
+
+* **Mục đích:** Ghi nhận minh bạch mọi lần chạy đánh giá chính thức, đặc biệt là bài kiểm tra độc lập duy nhất trên tập `val2017` (5.000 ảnh) theo quy chuẩn chống rò rỉ dữ liệu (RULES.md §17.3).
+* **Quy tắc bất biến:** Không xóa, không sửa tay hoặc thay đổi lịch sử đánh giá.
+
+---
+
+## 1. QUY CHẾ ĐÁNH GIÁ TRÊN TẬP KIỂM THỬ ĐỘC LẬP (`val2017`)
+
+1. Quá trình phát triển mô hình, điều chỉnh siêu tham số và ablation studies **chỉ được phép** sử dụng tập `val-heldout 1k`.
+2. Tập `val2017` (5k ảnh) chỉ được mở khóa để chạy đánh giá chính thức **đúng 1 lần duy nhất** khi toàn bộ quá trình huấn luyện và tối ưu đã hoàn tất tại Milestone M8.
+3. Khi thực hiện lệnh đánh giá `python src/evaluate.py --dataset val2017 --final`:
+   - Hệ thống tự động tạo file khóa `outputs/final_eval.lock`.
+   - Một bản ghi chi tiết sẽ được ghi thêm vào Bảng Nhật ký bên dưới.
+   - Nếu file `final_eval.lock` đã tồn tại, chương trình sẽ lập tức báo lỗi và từ chối chạy lại.
+
+---
+
+## 2. BẢNG NHẬT KÝ THỰC THI (AUDIT RECORDS)
+
+| Thời gian (Timestamp) | Commit Hash | Checkpoint Path | Tập dữ liệu | Config | mAP@[.5:.95] | Trạng thái | Người thực thi / Ghi chú |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| *Chưa ghi nhận* | - | - | - | - | - | PENDING | Chờ hoàn thành Milestone M8 |
+
+---
+
+## 3. LỊCH SỬ THAY ĐỔI CẤU HÌNH QUAN TRỌNG
+
+- **2026-11-14 (M0):** Phân chia cố định 14.000 train và 1.000 held-out từ `train2017` bằng seed 42, kiểm tra giao thoa = 0.
+- **2026-11-14 (M1):** Cố định hệ tọa độ Letterbox $512 \times 512$, độ lệch khép kín $< 1.0\text{ px}$.
+- **2026-11-14 (M2):** Cố định kiến trúc ResNet-50-FPN + Decoupled Head, khởi tạo Focal bias $b \approx -4.595$.
