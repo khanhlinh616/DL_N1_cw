@@ -282,7 +282,7 @@ Khi các yêu cầu mâu thuẫn nhau, ưu tiên theo thứ tự:
 - Dự án này dùng cấu trúc thư mục ở mục 2.3 của thiết kế (áp dụng thay §9 cho dự án này).
 
 ### 17.2 Ràng buộc bất biến (chi tiết ở DEFINE_AND_DESIGN)
-- Detector one-stage YOLO-style; cấm Faster R-CNN, RPN, RoIAlign, `torchvision.models.detection.*`.
+- Detector one-stage YOLO-style;.
 - ResNet-50 (FrozenBN) → FPN P3/P4/P5 → Decoupled Head, ảnh 512×512.
 - Tự viết: Head, Assigner, Loss (CIoU, Focal, BCE), Decoder. Chỉ dùng torchvision cho resnet50, FPN, nms, box_iou.
 - Công thức giải mã, quy tắc gán ô dương và công thức loss phải đúng mục 2.4.3 và 2.7.

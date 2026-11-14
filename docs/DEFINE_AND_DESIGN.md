@@ -235,17 +235,27 @@ flowchart TD
 cw_nhom1/
 ├── configs/                          # File cấu hình YAML
 │   ├── base_config.yaml              # Hyperparameters (lr, epochs, loss weights)
-│   ├── model_resnet50_fpn.yaml       # Cấu hình Backbone, FPN và Head
-│   └── dataset_coco_subset.yaml      # Cấu hình split 14k train / 1k val-heldout / 5k test
+│   ├── dataset_coco_subset.yaml      # Cấu hình split 14k train / 1k val-heldout / 5k test
+│   └── model_resnet50_fpn.yaml       # Cấu hình Backbone, FPN và Head
 ├── data/                             # Dữ liệu (được .gitignore)
 │   └── coco/
 │       ├── annotations/              # instances_train2017.json, instances_val2017.json
 │       ├── train2017/                # Ảnh gốc train
 │       ├── val2017/                  # 5.000 ảnh test độc lập
+│       ├── zips/                     # Archives nén (train2017.tmp, val2017.zip, annotations)
 │       ├── train_subset14k.json      # Annotation 14k ảnh train
 │       └── val_heldout1k.json        # Annotation 1k ảnh val-heldout
-├── docs/                             # Tài liệu kỹ thuật
-│   └── DEFINE_AND_DESIGN.md          # Tài liệu đặc tả kỹ thuật này
+├── docs/                             # Danh mục tài liệu theo RULES.md §16 (< 200 dòng/file)
+│   ├── DEFINE_AND_DESIGN.md          # Tài liệu đặc tả kỹ thuật tổng (giữ nguyên, chưa tách)
+│   ├── report.md                     # Báo cáo chính: Example In/Out, Results, Limitations, Future Impr.
+│   ├── data.md                       # Chi tiết pipeline dữ liệu, 80 lớp, letterbox
+│   ├── model.md                      # Kiến trúc ResNet50-FrozenBN-FPN + Decoupled Head
+│   ├── training.md                   # Chi tiết Assigner 3 ô, MultiTaskLoss, Engine train
+│   ├── evaluation.md                 # Decoder offset [-0.5, 1.5], Batched NMS, COCOeval
+│   ├── demo.md                       # Hướng dẫn chạy demo ảnh đơn và xuất 15 ảnh mẫu
+│   ├── ai-usage.md                   # Nhật ký sử dụng AI minh bạch theo từng milestone
+│   ├── plan-progress-status.md       # Bảng theo dõi tiến độ M0 -> M9
+│   └── audit-log.md                  # Nhật ký khóa lock và audit khi chạy val2017 (M8)
 ├── notebooks/                        # Jupyter Notebooks EDA & kiểm thử
 │   ├── 01_data_exploration.ipynb
 │   └── 02_inference_inspection.ipynb
@@ -273,18 +283,25 @@ cw_nhom1/
 │   │   ├── config.py                 # YAML loader
 │   │   └── logger.py                 # Metric tracker
 │   ├── demo.py                       # CLI test 1 ảnh đơn
-│   ├── evaluate.py                   # CLI chạy COCOeval trên val2017
+│   ├── evaluate.py                   # CLI chạy COCOeval trên val2017 (ràng buộc cờ --final)
 │   ├── train.py                      # CLI huấn luyện chính
 │   └── visualize.py                  # CLI xuất ảnh trực quan hóa
 ├── tests/                            # Bộ kiểm thử đơn vị (Unit Tests)
 │   ├── test_assigner.py              # Test shape, logic 3 ô lân cận và miền offset
+│   ├── test_box_ops.py               # Test CIoU loss và IoU hình học
 │   ├── test_category_mapper.py       # Test 80 lớp và ánh xạ 2 chiều
+│   ├── test_dataset.py               # Test nạp batch và metadata
+│   ├── test_data_split.py            # Test chia tập không rò rỉ (overlap = 0)
 │   ├── test_decoder.py               # Test biến đổi tọa độ và Batched NMS
 │   ├── test_loss.py                  # Test tính ổn định số học của CIoU và Focal
-│   └── test_model_forward.py         # Test forward pass shape
+│   ├── test_model_forward.py         # Test forward pass shape
+│   ├── test_overfit.py               # Test overfit 10 ảnh (M3)
+│   ├── test_transforms.py            # Test Letterbox sai số khôi phục < 1px
+│   └── verify_split.py               # Script kiểm tra độc lập tập split
 ├── .gitignore                        # Bỏ qua data, outputs, checkpoint, cache
 ├── README.md                         # Hướng dẫn chạy dự án
-└── requirements.txt                  # Danh mục dependencies
+├── requirements.txt                  # Danh mục dependencies
+└── RULES.md                          # Quy chuẩn và quy tắc phát triển dự án
 ```
 
 ### 2.4 Data Flow
