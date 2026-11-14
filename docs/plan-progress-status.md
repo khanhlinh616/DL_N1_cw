@@ -1,7 +1,7 @@
 # TIẾN ĐỘ THỰC HIỆN DỰ ÁN (PLAN & PROGRESS STATUS)
 
 * **Cập nhật lần cuối:** 2026-11-14
-* **Trạng thái tổng thể:** Hoàn thành M0, M1, M2, M3, M4; Sẵn sàng cho M5.
+* **Trạng thái tổng thể:** Hoàn thành M0, M1, M2, M3, M4, M5; Sẵn sàng cho M6.
 
 ---
 
@@ -14,7 +14,7 @@
 | **M2** | Backbone ResNet50 (FrozenBN) + FPN + YOLO Head | Forward pass GPU/CPU thành công, đúng shape tại P3, P4, P5, bias obj ≈ -4.595 | **Hoàn thành** |
 | **M3** | Assigner (3 ô) + MultiTaskLoss (CIoU, Focal, BCE) | Unit test loss, Overfit 10 ảnh: loss mượt về 0, recall ≈ 1.0 | **Hoàn thành** |
 | **M4** | Training engine (AdamW, Cosine LR, AMP, clip 10) | Chạy 1 epoch thử nghiệm, lưu checkpoint theo val-heldout | **Hoàn thành** |
-| **M5** | Decoder (offset [-0.5, 1.5], dải 16s), Batched NMS | Smoke test 100 ảnh held-out, xuất JSON hợp lệ, chạy COCOeval | Chưa bắt đầu |
+| **M5** | Decoder (offset [-0.5, 1.5], dải 16s), Batched NMS | Smoke test 100 ảnh held-out, xuất JSON hợp lệ, chạy COCOeval | **Hoàn thành** |
 | **M6** | Train baseline 20 epochs trên 14k ảnh train | Hoàn thành 20 epochs, lưu `best_map.pth` theo val-heldout | Chưa bắt đầu |
 | **M7** | 3 bài Ablation studies (mỗi bài 5-10 epochs) | Bảng so sánh 3 ablation chỉ đo trên val-heldout 1k | Chưa bắt đầu |
 | **M8** | Final evaluation trên val2017 (5k) + Visualizer | Chạy COCOeval đúng 1 lần trên val2017, xuất ≥15 ảnh (tốt & 3 ca lỗi) | Chưa bắt đầu |
@@ -67,3 +67,20 @@
 - [x] Chạy thử nghiệm thực tế 1 epoch smoke run trên ảnh thật: không lỗi, không NaN/Inf, lưu checkpoint `best_map.pth` và `train_history.json` thành công.
 - [x] Kiểm thử resume thực tế từ checkpoint: khôi phục chính xác trạng thái model, optimizer, scheduler và epoch.
 - [x] Toàn bộ test suite: **41 tests** (40 unit tests + 1 slow overfit test) PASSED 100%.
+
+### Milestone M5: Decoder & Pilot COCOeval
+- [x] `src/core/decoder.py`: Triển khai giải mã tọa độ hộp bao theo đúng công thức DEFINE_AND_DESIGN.md:
+  - Tọa độ tâm: $c_x = (\text{grid}_x + 2\sigma(t_x) - 0.5) \cdot s_l \in [\text{grid}_x - 0.5, \text{grid}_x + 1.5] \cdot s_l$.
+  - Kích thước: $w = (2\sigma(t_w))^2 \cdot 4 \cdot s_l \in [0, 16 \cdot s_l]$.
+  - Điểm tự tin tích hợp: $\text{score} = \sigma(t_{\text{obj}}) \times \sigma(t_{\text{cls}})$.
+  - Thuật toán `batched_nms` độc lập cho từng lớp (IoU threshold = 0.60, max 100 boxes).
+  - Khôi phục chính xác tọa độ về kích thước ảnh gốc dựa trên metadata Letterbox: $x_{\text{orig}} = (x - \text{pad}_w) / r$.
+  - Hàm `to_coco_results`: Chuyển đổi định dạng phát hiện sang cấu trúc chuẩn COCO JSON kèm ánh xạ `category_id` $[1, 90]$ và làm tròn số thập phân.
+- [x] `src/evaluate.py`: Xây dựng module và CLI đánh giá chính thức tích hợp `pycocotools.cocoeval.COCOeval`:
+  - Cơ chế kiểm soát an toàn chống rò rỉ dữ liệu (RULES.md §17.3): chặn thực thi trên `val2017` nếu thiếu cờ `--final` hoặc khi file khóa `outputs/final_eval.lock` đã tồn tại.
+  - Tự động ghi nhật ký kiểm toán vào `docs/audit-log.md` khi đánh giá chính thức.
+  - Xử lý mượt mà ngoại lệ danh sách kết quả rỗng của `pycocotools` để tránh lỗi sụp đổ chương trình khi model chưa được huấn luyện.
+- [x] `tests/test_decoder.py`: 6/6 unit tests passed (công thức & cận giải mã, gom 5.376 anchors đa tầng, cô lập lớp trong Batched NMS, khôi phục tọa độ ảnh gốc, xử lý kết quả rỗng, định dạng COCOeval).
+- [x] `tests/test_evaluate.py`: 3/3 unit tests passed (chặn an toàn `val2017` thiếu `--final`, chặn khi có file khóa, pipeline COCOeval hoàn chỉnh trên dữ liệu tổng hợp).
+- [x] Pilot Smoke Test trên 100 ảnh held-out thật: Chạy thành công lệnh `python -m src.evaluate --dataset heldout --max-images 100`, xuất 8.289 dự đoán hợp lệ vào `outputs/evaluation_results/predictions_heldout.json`, chạy `COCOeval` tổng hợp đầy đủ 12 chỉ số chuẩn COCO.
+- [x] Toàn bộ test suite dự án: **49 tests** (48 unit tests + 1 slow overfit test) PASSED 100%.

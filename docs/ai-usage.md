@@ -66,3 +66,21 @@
   - CLI dry run: `python -m src.train --epochs 1 --batch-size 2 --max-images 4` hoàn thành trong 10 giây, sinh checkpoint và log history.
   - CLI resume run: `python -m src.train --epochs 2 --batch-size 2 --max-images 4 --resume outputs/checkpoints/last_epoch.pth` khôi phục chính xác trạng thái từ epoch 2 và cập nhật checkpoint tốt nhất.
   - Toàn bộ 40 fast unit tests của dự án PASSED 100% trong 12.89s.
+
+---
+
+## MILESTONE M5: PREDICTION DECODER & COCOEVAL INTEGRATION
+- **Công cụ:** Antigravity AI Agent.
+- **Mục đích prompt:** Triển khai module giải mã tọa độ hộp bao `src/core/decoder.py` (công thức offset $[-0.5, 1.5]$ và kích thước $[0, 16s]$, Batched NMS, khôi phục kích thước ảnh gốc), module và CLI đánh giá `src/evaluate.py` tích hợp `pycocotools.cocoeval`, bộ unit test `tests/test_decoder.py` và `tests/test_evaluate.py`, thực hiện pilot smoke test trên 100 ảnh held-out thật.
+- **Đóng góp của sinh viên:** Yêu cầu nghiệm thu M5 theo đúng tiêu chuẩn thiết kế DEFINE_AND_DESIGN.md §2.4.3 & §2.7.4, giám sát chặt chẽ quy tắc chống rò rỉ dữ liệu (RULES.md §17.3 không chạm `val2017` trước M8), yêu cầu giải thích logic giải mã để nắm vững bản chất học thuật trước khi tích hợp.
+- **Thành phần AI sinh ra / tinh chỉnh:**
+  - `src/core/decoder.py`: Các hàm `decode_box_coordinates`, class `YoloDecoder` (kết hợp multi-scale logits, tính composite confidence $\text{score} = \sigma(obj) \times \sigma(cls)$, lọc ngưỡng, Batched NMS theo lớp, khôi phục tọa độ theo scale ratio và padding) và hàm `to_coco_results`.
+  - `src/evaluate.py`: Hàm `evaluate_coco` và CLI hoàn chỉnh hỗ trợ `--dataset heldout`/`val2017`, `--final`, `--max-images`, `--output-dir`, cơ chế kiểm soát khóa an toàn `outputs/final_eval.lock` và ghi nhật ký kiểm toán `docs/audit-log.md`.
+  - `tests/test_decoder.py`: Bộ 6 unit tests bao phủ toàn diện từ công thức giải mã, tính chất toán học của cận dải, gom logits 3 tầng (5.376 anchors), kiểm chứng cô lập lớp trong Batched NMS, khôi phục tọa độ ảnh gốc đến định dạng xuất COCO JSON.
+  - `tests/test_evaluate.py`: Bộ 3 unit tests kiểm thử cơ chế chặn an toàn khi thiếu cờ `--final`, chặn khi có file khóa, và pipeline đánh giá trọn vẹn trên dữ liệu kiểm thử.
+- **Kiểm chứng:**
+  - `pytest tests/test_decoder.py`: 6/6 passed.
+  - `pytest tests/test_evaluate.py`: 3/3 passed.
+  - Kiểm thử an toàn CLI: `python -m src.evaluate --dataset val2017` bị chặn lập tức với mã lỗi 1 và thông điệp cảnh báo vi phạm quy tắc.
+  - Pilot Smoke Test 100 ảnh held-out thật: `python -m src.evaluate --dataset heldout --max-images 100` hoàn tất thành công, tạo file kết quả chuẩn `outputs/evaluation_results/predictions_heldout.json` (8.289 predictions), kích hoạt `COCOeval` tổng hợp và xuất bảng 12 chỉ số chuẩn mực COCO.
+  - Toàn bộ bộ test của dự án: **48/48 unit tests** (+ 1 slow overfit test) PASSED 100%.
