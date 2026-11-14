@@ -1,0 +1,23 @@
+model:
+  name: "resnet50_fpn_yolo_head"
+  num_classes: 80
+  input_size: 512
+
+backbone:
+  type: "resnet50"
+  pretrained: true
+  frozen_batchnorm: true
+  trainable_layers: 3  # Layers 2, 3, 4 trainable after freeze period
+
+fpn:
+  in_channels_list: [512, 1024, 2048]  # resnet50 layer2, layer3, layer4
+  out_channels: 256
+  strides: [8, 16, 32]                 # P3, P4, P5
+
+head:
+  type: "DecoupledYOLOHead"
+  in_channels: 256
+  feat_channels: 256
+  shared_weights: true
+  num_classes: 80
+  focal_bias_pi: 0.01                  # bias = -log((1-pi)/pi) ≈ -4.595

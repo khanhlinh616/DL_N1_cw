@@ -1,0 +1,43 @@
+training:
+  seed: 42
+  epochs: 20
+  batch_size: 16
+  accumulate_grad_batches: 1
+  amp: true
+  num_workers: 4
+  grad_clip_norm: 10.0
+  freeze_backbone_epochs: 3
+
+optimizer:
+  type: "AdamW"
+  lr: 0.001
+  weight_decay: 0.0005
+  betas: [0.9, 0.999]
+
+scheduler:
+  type: "CosineAnnealingLR"
+  warmup_epochs: 2
+  warmup_bias_lr: 0.0001
+  min_lr: 0.00001
+
+loss_weights:
+  lambda_box: 5.0
+  lambda_obj: 1.0
+  lambda_cls: 1.0
+  focal_gamma: 2.0
+  focal_alpha: 0.25
+
+evaluation:
+  conf_threshold: 0.05
+  nms_iou_threshold: 0.60
+  max_detections: 100
+
+checkpoints:
+  save_dir: "outputs/checkpoints"
+  best_model_name: "best_map.pth"
+  last_model_name: "last_epoch.pth"
+
+logging:
+  log_dir: "outputs/logs"
+  eval_results_dir: "outputs/evaluation_results"
+  viz_dir: "outputs/visualizations"
