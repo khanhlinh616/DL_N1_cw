@@ -50,3 +50,19 @@
   - Unit tests M3: `test_assigner.py` (3/3 passed), `test_box_ops.py` (3/3 passed), `test_loss.py` (2/2 passed).
   - Overfit test 10 ảnh: Initial loss `58.9644` $\to$ Final loss `1.0534` (giảm `98.21%` $\ge 95\%$), Recall `1.00` (`10/10` boxes detected $\ge 0.90$).
   - Toàn bộ test suite dự án: **36/36 passed** 100%.
+
+---
+
+## MILESTONE M4: TRAINING ENGINE & VALIDATION CHECKPOINTS
+- **Công cụ:** Antigravity AI Agent.
+- **Mục đích prompt:** Xây dựng Training Engine hoàn chỉnh (`src/train.py`), module theo dõi chỉ số (`src/utils/logger.py`), các kịch bản kiểm thử đơn vị (`tests/test_train.py`), chạy thử nghiệm 1 epoch và kiểm tra resume từ checkpoint.
+- **Đóng góp của sinh viên:** Yêu cầu tiếp tục tiến độ M4, giám sát việc tuân thủ các quy tắc trong RULES.md §17.4-§17.8 và DEFINE_AND_DESIGN.md.
+- **Thành phần AI sinh ra / tinh chỉnh:**
+  - `src/utils/logger.py`: Module `MetricTracker` tính running average đa metric và `TrainingLogger` lưu lịch sử huấn luyện dạng JSON.
+  - `src/train.py`: CLI và vòng lặp huấn luyện đầy đủ: AdamW, Cosine LR scheduler có warmup, AMP GradScaler, Gradient Clipping 10.0, đóng băng backbone 3 epoch đầu, cơ chế lưu/khôi phục checkpoint (`best_map.pth`, `last_epoch.pth`) và chạy thử nghiệm (--max-images).
+  - `tests/test_train.py`: Bộ 5 unit tests kiểm thử bộ theo dõi metric, tối ưu hóa, scheduler, tính nhất quán bit-exact của checkpoint và 1 epoch smoke test.
+- **Kiểm chứng:**
+  - `pytest tests/test_train.py`: 5/5 passed.
+  - CLI dry run: `python -m src.train --epochs 1 --batch-size 2 --max-images 4` hoàn thành trong 10 giây, sinh checkpoint và log history.
+  - CLI resume run: `python -m src.train --epochs 2 --batch-size 2 --max-images 4 --resume outputs/checkpoints/last_epoch.pth` khôi phục chính xác trạng thái từ epoch 2 và cập nhật checkpoint tốt nhất.
+  - Toàn bộ 40 fast unit tests của dự án PASSED 100% trong 12.89s.

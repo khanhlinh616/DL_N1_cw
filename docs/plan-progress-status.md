@@ -1,7 +1,7 @@
 # TIẾN ĐỘ THỰC HIỆN DỰ ÁN (PLAN & PROGRESS STATUS)
 
 * **Cập nhật lần cuối:** 2026-11-14
-* **Trạng thái tổng thể:** Hoàn thành M0, M1, M2, M3; Sẵn sàng cho M4.
+* **Trạng thái tổng thể:** Hoàn thành M0, M1, M2, M3, M4; Sẵn sàng cho M5.
 
 ---
 
@@ -13,7 +13,7 @@
 | **M1** | Category mapping, transforms, Dataset metadata | Unit test mapping 80 lớp 100%, shape [B,3,512,512], metadata đầy đủ, roundtrip box < 1px | **Hoàn thành** |
 | **M2** | Backbone ResNet50 (FrozenBN) + FPN + YOLO Head | Forward pass GPU/CPU thành công, đúng shape tại P3, P4, P5, bias obj ≈ -4.595 | **Hoàn thành** |
 | **M3** | Assigner (3 ô) + MultiTaskLoss (CIoU, Focal, BCE) | Unit test loss, Overfit 10 ảnh: loss mượt về 0, recall ≈ 1.0 | **Hoàn thành** |
-| **M4** | Training engine (AdamW, Cosine LR, AMP, clip 10) | Chạy 1 epoch thử nghiệm, lưu checkpoint theo val-heldout | Chưa bắt đầu |
+| **M4** | Training engine (AdamW, Cosine LR, AMP, clip 10) | Chạy 1 epoch thử nghiệm, lưu checkpoint theo val-heldout | **Hoàn thành** |
 | **M5** | Decoder (offset [-0.5, 1.5], dải 16s), Batched NMS | Smoke test 100 ảnh held-out, xuất JSON hợp lệ, chạy COCOeval | Chưa bắt đầu |
 | **M6** | Train baseline 20 epochs trên 14k ảnh train | Hoàn thành 20 epochs, lưu `best_map.pth` theo val-heldout | Chưa bắt đầu |
 | **M7** | 3 bài Ablation studies (mỗi bài 5-10 epochs) | Bảng so sánh 3 ablation chỉ đo trên val-heldout 1k | Chưa bắt đầu |
@@ -52,3 +52,18 @@
   - Initial loss: `58.9644` $\to$ Final loss: `1.0534` (giảm **98.21%** $\ge 95\%$).
   - Recall kiểm thử ở chế độ `EVAL` end-to-end đạt **1.00** (**10/10** boxes detected $\ge 0.90$).
 - [x] Toàn bộ **36/36 tests** của dự án PASSED 100%.
+
+### Milestone M4: Training Engine & Validation Checkpoints
+- [x] `src/utils/logger.py`: Module `MetricTracker` tính running averages chuẩn xác cho mọi thành phần loss (`loss_total`, `loss_box`, `loss_obj`, `loss_cls`) và `TrainingLogger` ghi nhật ký từng epoch ra tệp `outputs/logs/train_history.json`.
+- [x] `src/train.py`: Vòng lặp huấn luyện hoàn chỉnh hỗ trợ đầy đủ:
+  - Tối ưu hóa: `AdamW` (weight decay 0.0005) kết hợp `CosineAnnealingLR` và Warmup 2 epochs.
+  - Mixed Precision (AMP) với `torch.amp.autocast` và `GradScaler`, hỗ trợ fallback CPU an toàn.
+  - Gradient Clipping: `clip_grad_norm_` ở ngưỡng `max_norm = 10.0`.
+  - Chiến lược đóng băng: 3 epoch đầu đóng băng Backbone (`freeze_backbone()`), từ epoch 4 mở khóa Layers 2–4 (`unfreeze_backbone()`); `FrozenBatchNorm2d` luôn giữ bất biến.
+  - Lưu checkpoint tốt nhất `best_map.pth` và checkpoint epoch cuối `last_epoch.pth` kèm đầy đủ `model_state_dict`, `optimizer_state_dict`, `scheduler_state_dict`, `config`, `epoch`, `git_commit`.
+  - Khả năng khôi phục huấn luyện thông qua cờ `--resume`.
+  - Chế độ smoke run / dry-run thông qua cờ `--max-images` và `--epochs`.
+- [x] `tests/test_train.py`: 5/5 unit tests passed (MetricTracker, TrainingLogger, Optimizer/Scheduler builders, Checkpoint consistency bit-exact, single epoch smoke run).
+- [x] Chạy thử nghiệm thực tế 1 epoch smoke run trên ảnh thật: không lỗi, không NaN/Inf, lưu checkpoint `best_map.pth` và `train_history.json` thành công.
+- [x] Kiểm thử resume thực tế từ checkpoint: khôi phục chính xác trạng thái model, optimizer, scheduler và epoch.
+- [x] Toàn bộ test suite: **41 tests** (40 unit tests + 1 slow overfit test) PASSED 100%.
