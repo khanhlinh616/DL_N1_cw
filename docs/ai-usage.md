@@ -92,4 +92,4 @@
 - **Mục đích prompt:** Khởi động vòng lặp huấn luyện chính thức Baseline 20 epochs trên 14.000 ảnh COCO train subset (`train_subset14k.json`) và đánh giá định kỳ trên 1.000 ảnh val held-out (`val_heldout1k.json`).
 - **Đóng góp của sinh viên:** Xác nhận chuyển giao milestone M6 sau khi kiểm chứng hoàn tất 100% dữ liệu 118k ảnh `train2017` và nghiệm thu M5.
 - **Thành phần AI sinh ra / điều phối:** Điều phối tiến trình huấn luyện nền, ghi nhận metric losses và lưu trữ checkpoints `best_map.pth`.
-- **Kiểm chứng:** Xác thực toàn vẹn 14.000 ảnh huấn luyện và 1.000 ảnh held-out; kiểm tra bước khởi động không gặp lỗi NaN/Inf hay rò rỉ bộ nhớ.
+- **Kiểm chứng:** Xác thực toàn vẹn 14.000 ảnh huấn luyện và 1.000 ảnh held-out; tiến trình chạy ổn định đạt ~13.300 ảnh (~75 phút) trước khi dừng an toàn theo chỉ định người dùng nhằm bảo vệ phần cứng CPU khỏi quá nhiệt. Toàn bộ code và checkpoint kiểm chứng đều sẵn sàng.

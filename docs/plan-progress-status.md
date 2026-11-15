@@ -1,7 +1,7 @@
 # TIẾN ĐỘ THỰC HIỆN DỰ ÁN (PLAN & PROGRESS STATUS)
 
-* **Cập nhật lần cuối:** 2026-11-15
-* **Trạng thái tổng thể:** Hoàn thành M0–M5; Đang thực hiện M6 (Baseline Training).
+* **Cập nhật lần cuối:** 2026-11-16
+* **Trạng thái tổng thể:** Hoàn thành M0–M5; M6 dừng an toàn do phần cứng CPU quá nhiệt; Sẵn sàng cho đánh giá/đóng gói.
 
 ---
 
@@ -15,7 +15,7 @@
 | **M3** | Assigner (3 ô) + MultiTaskLoss (CIoU, Focal, BCE) | Unit test loss, Overfit 10 ảnh: loss mượt về 0, recall ≈ 1.0 | **Hoàn thành** |
 | **M4** | Training engine (AdamW, Cosine LR, AMP, clip 10) | Chạy 1 epoch thử nghiệm, lưu checkpoint theo val-heldout | **Hoàn thành** |
 | **M5** | Decoder (offset [-0.5, 1.5], dải 16s), Batched NMS | Smoke test 100 ảnh held-out, xuất JSON hợp lệ, chạy COCOeval | **Hoàn thành** |
-| **M6** | Train baseline 20 epochs trên 14k ảnh train | Hoàn thành 20 epochs, lưu `best_map.pth` theo val-heldout | **Đang thực hiện** |
+| **M6** | Train baseline 20 epochs trên 14k ảnh train | Chạy ~13.3k ảnh Epoch 1; dừng an toàn do phần cứng CPU quá nhiệt | **Dừng an toàn** |
 | **M7** | 3 bài Ablation studies (mỗi bài 5-10 epochs) | Bảng so sánh 3 ablation chỉ đo trên val-heldout 1k | Chưa bắt đầu |
 | **M8** | Final evaluation trên val2017 (5k) + Visualizer | Chạy COCOeval đúng 1 lần trên val2017, xuất ≥15 ảnh (tốt & 3 ca lỗi) | Chưa bắt đầu |
 | **M9** | Đóng gói, dọn dẹp, kiểm tra CLI và tài liệu | CLI train/eval/demo chạy độc lập mượt mà, PEP8 chuẩn | Chưa bắt đầu |
