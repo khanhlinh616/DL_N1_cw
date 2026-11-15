@@ -84,3 +84,12 @@
   - Kiểm thử an toàn CLI: `python -m src.evaluate --dataset val2017` bị chặn lập tức với mã lỗi 1 và thông điệp cảnh báo vi phạm quy tắc.
   - Pilot Smoke Test 100 ảnh held-out thật: `python -m src.evaluate --dataset heldout --max-images 100` hoàn tất thành công, tạo file kết quả chuẩn `outputs/evaluation_results/predictions_heldout.json` (8.289 predictions), kích hoạt `COCOeval` tổng hợp và xuất bảng 12 chỉ số chuẩn mực COCO.
   - Toàn bộ bộ test của dự án: **48/48 unit tests** (+ 1 slow overfit test) PASSED 100%.
+
+---
+
+## MILESTONE M6: BASELINE MODEL TRAINING (14K SUBSET)
+- **Công cụ:** Antigravity AI Agent.
+- **Mục đích prompt:** Khởi động vòng lặp huấn luyện chính thức Baseline 20 epochs trên 14.000 ảnh COCO train subset (`train_subset14k.json`) và đánh giá định kỳ trên 1.000 ảnh val held-out (`val_heldout1k.json`).
+- **Đóng góp của sinh viên:** Xác nhận chuyển giao milestone M6 sau khi kiểm chứng hoàn tất 100% dữ liệu 118k ảnh `train2017` và nghiệm thu M5.
+- **Thành phần AI sinh ra / điều phối:** Điều phối tiến trình huấn luyện nền, ghi nhận metric losses và lưu trữ checkpoints `best_map.pth`.
+- **Kiểm chứng:** Xác thực toàn vẹn 14.000 ảnh huấn luyện và 1.000 ảnh held-out; kiểm tra bước khởi động không gặp lỗi NaN/Inf hay rò rỉ bộ nhớ.
