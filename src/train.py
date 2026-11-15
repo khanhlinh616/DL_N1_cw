@@ -265,7 +265,7 @@ def build_dataloaders(
 
     train_img_dir = Path(dataset_cfg.get("train_images_dir", "data/coco/train2017"))
     train_ann_file = Path(dataset_cfg.get("train_annotations_file", "data/coco/train_subset14k.json"))
-    val_img_dir = Path(dataset_cfg.get("val_images_dir", "data/coco/val2017"))
+    val_img_dir = Path(dataset_cfg.get("val_heldout_images_dir", dataset_cfg.get("train_images_dir", "data/coco/train2017")))
     val_ann_file = Path(dataset_cfg.get("val_heldout_annotations_file", "data/coco/val_heldout1k.json"))
 
     # Fallback to val2017 directory if train2017 is not yet downloaded (useful for smoke runs)
