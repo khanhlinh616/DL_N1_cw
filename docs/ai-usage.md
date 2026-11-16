@@ -93,3 +93,4 @@
 - **Đóng góp của sinh viên:** Xác nhận chuyển giao milestone M6 sau khi kiểm chứng hoàn tất 100% dữ liệu 118k ảnh `train2017` và nghiệm thu M5.
 - **Thành phần AI sinh ra / điều phối:** Điều phối tiến trình huấn luyện nền, ghi nhận metric losses và lưu trữ checkpoints `best_map.pth`.
 - **Kiểm chứng:** Xác thực toàn vẹn 14.000 ảnh huấn luyện và 1.000 ảnh held-out; tiến trình chạy ổn định đạt ~13.300 ảnh (~75 phút) trước khi dừng an toàn theo chỉ định người dùng nhằm bảo vệ phần cứng CPU khỏi quá nhiệt. Toàn bộ code và checkpoint kiểm chứng đều sẵn sàng.
+- **Hợp nhất lịch sử:** Hợp nhất nhánh lịch sử ban đầu (commit `952fd34` từ DL Team 1) với toàn bộ tiến trình M0–M6, gắn lại tags M0–M6 theo đúng commit hash ban đầu và đồng bộ duy nhất nhánh `main`.

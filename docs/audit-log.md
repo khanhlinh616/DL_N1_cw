@@ -34,4 +34,4 @@
 - **2026-11-15 (M5):** Triển khai Decoder tọa độ, Batched NMS, tích hợp COCOeval, pilot test 100 ảnh held-out (8.289 predictions).
 - **2026-11-15 (Data):** Tải và giải nén hoàn tất 100% 118.287 ảnh `train2017` bằng `tar.exe`, xác thực 0 ảnh thiếu.
 - **2026-11-16 (M6):** Khởi chạy Baseline trên 14k ảnh train; đạt ~13.3k ảnh (75 phút) và dừng an toàn theo yêu cầu người dùng do CPU quá nhiệt.
-- **2026-11-16 (Sync):** Đồng bộ duy nhất 1 nhánh `main` lên GitHub `khanhlinh616/DL_N1_cw`, gắn đầy đủ thẻ tags M0–M6.
+- **2026-11-16 (Merge & Sync):** Hợp nhất (merge) lịch sử gốc (commit 952fd34 từ DL Team 1) và gắn lại chính xác toàn bộ thẻ tags M0–M6 theo từng commit nguyên bản (`8a60937`, `ee9d166`, `86d3c17`, `952fd34`, `70f6d9c`, `18cc511`, `93d9134`). Đồng bộ duy nhất 1 nhánh `main` lên GitHub `khanhlinh616/DL_N1_cw`.
