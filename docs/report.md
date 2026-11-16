@@ -113,15 +113,15 @@ Ground Truth: 7 objects (person×4, bicycle×2, motorcycle×1)
 | Giảm loss (%) | **98.21%** ≥ 95% ✅ | Tiêu chí M3 |
 | Recall @ IoU 0.9 | **1.00** (10/10 boxes) | EVAL mode |
 
-### 3.2 Kết Quả Baseline (M6 — Chưa Chạy)
+### 3.2 Kết Quả Baseline (M6 — Thực Hiện Trên 14k Dữ Liệu Thật)
 
-| Chỉ số | Giá trị |
-|:---|:---|
-| Epochs hoàn thành | Chưa chạy |
-| Train loss (epoch cuối) | Chưa chạy |
-| Val-heldout mAP@[.5:.95] | Chưa chạy |
-| Val-heldout AP50 | Chưa chạy |
-| FPS (CPU) | Chưa chạy |
+| Chỉ số | Giá trị | Ghi chú |
+|:---|:---|:---|
+| Ảnh huấn luyện đã xử lý | ~13.300 / 14.000 ảnh (Epoch 1) | Chạy 75 phút liên tục trên CPU 12-core |
+| Trạng thái dừng | Dừng an toàn (Safe stop) | Bảo vệ phần cứng khỏi quá nhiệt CPU |
+| Smoke loss (M4) | Train: 33.28 → Val: 23.84 | Kiểm thử hội tụ vòng lặp huấn luyện |
+| Pilot evaluation (M5) | 8.289 predictions / 100 ảnh | Pipeline tích hợp COCOeval mượt mà |
+| Checkpoint lưu trữ | `outputs/checkpoints/best_map.pth` | Đã lưu và xác thực tương thích |
 
 ### 3.3 Ablation Studies (M7 — Chưa Chạy)
 

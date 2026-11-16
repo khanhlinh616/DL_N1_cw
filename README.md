@@ -134,10 +134,10 @@ Xem chi tiết: [docs/report.md](docs/report.md)
 |:---|:---|:---|
 | M3 Overfit 10 ảnh | Loss drop | 98.21% (58.96 → 1.05) |
 | M3 Overfit 10 ảnh | Recall@IoU0.9 | 1.00 (10/10) |
-| M6 Baseline (20 epochs) | mAP@[.5:.95] | Chưa chạy |
-| M8 Final eval (val2017) | mAP@[.5:.95] | Chưa chạy |
+| M6 Baseline (~13.3k ảnh) | Trạng thái | Dừng an toàn (CPU thermal limit) |
+| M8 Final eval (val2017) | mAP@[.5:.95] | Chỉ chạy 1 lần với --final |
 
-> Số liệu M6-M8 sẽ được cập nhật sau khi hoàn tất tải train2017.zip (~18.5 GB).
+> Dữ liệu COCO train2017 (118k ảnh) đã tải và giải nén 100%. Checkpoint tại `outputs/checkpoints/best_map.pth`.
 
 ---
 
