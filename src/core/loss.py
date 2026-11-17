@@ -71,6 +71,8 @@ class MultiTaskLoss(nn.Module):
         focal_gamma: float = 2.0,
         num_classes: int = 80,
         strides: List[int] = [8, 16, 32],
+        box_loss_type: str = "ciou",
+        obj_loss_type: str = "focal",
     ) -> None:
         super().__init__()
         self.lambda_box = lambda_box
@@ -80,6 +82,8 @@ class MultiTaskLoss(nn.Module):
         self.focal_gamma = focal_gamma
         self.num_classes = num_classes
         self.strides = strides
+        self.box_loss_type = box_loss_type
+        self.obj_loss_type = obj_loss_type
         self.level_names = ["P3", "P4", "P5"]
 
     def _decode_box_predictions(
@@ -172,21 +176,28 @@ class MultiTaskLoss(nn.Module):
             pred_obj = pred_dict["obj"]  # [B, 1, H, W]
             pred_cls = pred_dict["cls"]  # [B, 80, H, W]
 
-            # 1. Objectness Loss (Focal Loss on ALL cells)
-            obj_loss_lvl = sigmoid_focal_loss(
-                pred_obj,
-                target_obj,
-                alpha=self.focal_alpha,
-                gamma=self.focal_gamma,
-                reduction="sum",
-            )
+            # 1. Objectness Loss (Focal Loss or BCE across all cells)
+            if self.obj_loss_type == "bce":
+                obj_loss_lvl = F.binary_cross_entropy_with_logits(
+                    pred_obj,
+                    target_obj,
+                    reduction="sum",
+                )
+            else:
+                obj_loss_lvl = sigmoid_focal_loss(
+                    pred_obj,
+                    target_obj,
+                    alpha=self.focal_alpha,
+                    gamma=self.focal_gamma,
+                    reduction="sum",
+                )
             total_obj_loss = total_obj_loss + obj_loss_lvl
 
             num_pos_lvl = pos_mask.sum().item()
             total_num_pos += num_pos_lvl
 
             if num_pos_lvl > 0:
-                # 2. Box Regression Loss (CIoU strictly on positive cells)
+                # 2. Box Regression Loss (CIoU or Smooth L1 strictly on positive cells)
                 decoded_boxes = self._decode_box_predictions(pred_box, stride=stride)
                 # Permute to [B, H, W, 4] for boolean masking
                 decoded_boxes_perm = decoded_boxes.permute(0, 2, 3, 1)
@@ -195,8 +206,17 @@ class MultiTaskLoss(nn.Module):
                 pos_pred_boxes = decoded_boxes_perm[pos_mask]  # [N_pos_lvl, 4]
                 pos_target_boxes = target_boxes_perm[pos_mask]  # [N_pos_lvl, 4]
 
-                lvl_ciou = ciou_loss(pos_pred_boxes, pos_target_boxes)
-                total_ciou_loss = total_ciou_loss + lvl_ciou.sum()
+                if self.box_loss_type == "smooth_l1":
+                    lvl_box_loss = F.smooth_l1_loss(
+                        pos_pred_boxes / 512.0,
+                        pos_target_boxes / 512.0,
+                        beta=1.0 / 9.0,
+                        reduction="sum",
+                    )
+                    total_ciou_loss = total_ciou_loss + lvl_box_loss
+                else:
+                    lvl_ciou = ciou_loss(pos_pred_boxes, pos_target_boxes)
+                    total_ciou_loss = total_ciou_loss + lvl_ciou.sum()
 
                 # 3. Class Classification Loss (BCE strictly on positive cells)
                 pred_cls_perm = pred_cls.permute(0, 2, 3, 1)  # [B, H, W, 80]

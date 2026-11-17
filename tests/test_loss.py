@@ -76,3 +76,29 @@ def test_loss_empty_targets_no_crash() -> None:
     assert loss_dict["loss_box"] == 0.0
     assert loss_dict["loss_cls"] == 0.0
     assert loss_dict["num_pos"] == 0
+
+
+def test_ablation_loss_variants() -> None:
+    """Test loss computation with ablation configurations: Smooth L1 and BCE objectness."""
+    detector = build_detector(num_classes=80, pretrained_backbone=False)
+    detector.train()
+
+    images = torch.randn((1, 3, 512, 512), dtype=torch.float32)
+    gt_boxes = [torch.tensor([[50.0, 50.0, 100.0, 100.0]])]
+    gt_labels = [torch.tensor([1])]
+
+    predictions = detector(images)
+    targets = assign_targets(gt_boxes, gt_labels)
+
+    # Variant 1: Smooth L1 box loss
+    loss_smooth_l1 = MultiTaskLoss(box_loss_type="smooth_l1")
+    l_box, d_box = loss_smooth_l1(predictions, targets)
+    assert torch.isfinite(l_box)
+    assert d_box["loss_box"] > 0.0
+
+    # Variant 2: BCE objectness loss
+    loss_bce_obj = MultiTaskLoss(obj_loss_type="bce")
+    l_bce, d_bce = loss_bce_obj(predictions, targets)
+    assert torch.isfinite(l_bce)
+    assert d_bce["loss_obj"] > 0.0
+
