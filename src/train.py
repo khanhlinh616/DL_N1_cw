@@ -120,6 +120,12 @@ def save_checkpoint(
     last_path = out_dir / last_name
     torch.save(state, last_path)
 
+    # Save numbered epoch checkpoint (epoch_1.pth, epoch_2.pth, ...)
+    if "epoch" in state:
+        epoch_num = int(state["epoch"]) + 1
+        epoch_path = out_dir / f"epoch_{epoch_num}.pth"
+        torch.save(state, epoch_path)
+
     if is_best:
         best_path = out_dir / best_name
         torch.save(state, best_path)
@@ -217,6 +223,17 @@ def train_one_epoch(
 
         tracker.update_dict(loss_dict, n=images.size(0))
 
+        if (batch_idx + 1) % 20 == 0 or (batch_idx + 1) == len(dataloader):
+            cur = tracker.get_averages()
+            print(
+                f"  [Epoch {epoch + 1} | Batch {batch_idx + 1}/{len(dataloader)}] "
+                f"loss: {loss_total.item():.4f} (avg: {cur.get('loss_total', 0.0):.4f}) "
+                f"box: {cur.get('loss_box', 0.0):.4f} "
+                f"obj: {cur.get('loss_obj', 0.0):.4f} "
+                f"cls: {cur.get('loss_cls', 0.0):.4f}",
+                flush=True,
+            )
+
     return tracker.get_averages()
 
 
@@ -241,7 +258,7 @@ def validate_one_epoch(
     tracker = MetricTracker()
 
     with torch.no_grad():
-        for images, targets in dataloader:
+        for batch_idx, (images, targets) in enumerate(dataloader):
             images = images.to(device)
             gt_boxes = [t["boxes"].to(device) for t in targets]
             gt_labels = [t["labels"].to(device) for t in targets]
@@ -250,6 +267,14 @@ def validate_one_epoch(
             predictions = model(images)
             _, loss_dict = loss_fn(predictions, assigned_targets)
             tracker.update_dict(loss_dict, n=images.size(0))
+
+            if (batch_idx + 1) % 20 == 0 or (batch_idx + 1) == len(dataloader):
+                cur_val = tracker.get_averages()
+                print(
+                    f"  [Validation | Batch {batch_idx + 1}/{len(dataloader)}] "
+                    f"loss: {cur_val.get('loss_total', 0.0):.4f}",
+                    flush=True,
+                )
 
     return tracker.get_averages()
 
