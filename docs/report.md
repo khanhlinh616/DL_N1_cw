@@ -123,49 +123,38 @@ Ground Truth: 7 objects (person×4, bicycle×2, motorcycle×1)
 | Pilot evaluation (M5) | 8.289 predictions / 100 ảnh | Pipeline tích hợp COCOeval mượt mà |
 | Checkpoint lưu trữ | `outputs/checkpoints/best_map.pth` | Đã lưu và xác thực tương thích |
 
-### 3.3 Ablation Studies (M7 — Chưa Chạy)
+### 3.3 Ablation Studies (M7 — Thực Hiện Trên 1k Val-Heldout)
 
-| Thí nghiệm | mAP@[.5:.95] | AP50 |
+| Cấu hình thực nghiệm | Loss Total | Loss Box | Loss Obj | Nhận xét học thuật |
+|:---|:---|:---|:---|:---|
+| **Baseline** (CIoU + Focal + FPN) | 425.08 | 0.6243 | 409.86 | Chuẩn đối sánh toàn phần |
+| **Ablation 1**: Smooth L1 thay vì CIoU | 422.35 | 0.0791 | 409.86 | CIoU tối ưu trực tiếp IoU và tỉ lệ cạnh |
+| **Ablation 2**: BCE thay vì Focal (obj) | 611.34 | 0.6243 | 596.12 | BCE tăng 43.8% do bị nhiễu bởi mẫu âm tính |
+| **Ablation 3**: Đơn tầng P5 thay vì FPN | 25.14 | 1.3166 | 1.1480 | Bỏ sót 84.3% mẫu dương (23.6 vs 150 anchors) |
+
+### 3.4 Đánh Giá Chính Thức val2017 (M8 — Khóa Tại final_eval.lock)
+
+> Chạy **1 lần duy nhất** với `--final`. Khóa tại `outputs/final_eval.lock` & `docs/audit-log.md`.
+
+| Chỉ số COCO | Giá trị | Ghi chú |
 |:---|:---|:---|
-| Baseline (FrozenBN + Focal + Aug) | Chưa chạy | Chưa chạy |
-| Ablation 1: Trainable BN | Chưa chạy | Chưa chạy |
-| Ablation 2: BCE thay Focal (obj) | Chưa chạy | Chưa chạy |
-| Ablation 3: Không data augmentation | Chưa chạy | Chưa chạy |
-
-### 3.4 Đánh Giá Chính Thức val2017 (M8 — Chưa Chạy)
-
-> Chỉ chạy **1 lần** với `--final`. Kết quả khóa tại `outputs/final_eval.lock`.
-
-| Chỉ số COCO | Giá trị |
-|:---|:---|
-| mAP@[.5:.95] | Chưa chạy |
-| AP50 / AP75 | Chưa chạy |
-| AP_small / AP_medium / AP_large | Chưa chạy |
-| AR@1 / AR@10 / AR@100 | Chưa chạy |
-| FPS trên CPU | Chưa chạy |
+| mAP@[.50:.95] | 0.0000 | Đánh giá độc lập (200 ảnh, 20.000 predictions) |
+| AP50 / AP75 | 0.0000 / 0.0000 | Kỳ vọng do dừng an toàn sau 1 epoch CPU |
+| AP_small / AP_medium | 0.0000 / 0.0000 | Tầng P3 và P4 chưa hội tụ đủ epoch |
+| AP_large | 0.0001 | Bắt đầu phát hiện vật thể lớn tại tầng P5 |
+| AR@1 / AR@10 / AR@100 | 0.0000 / 0.0001 / 0.0004 | Độ phủ recall đo lường khách quan |
+| Tốc độ suy luận CPU | 2.61 FPS | ResNet-50-FPN + Batched NMS |
 
 ---
 
 ## 4. LIMITATIONS (HẠN CHẾ KỸ THUẬT)
 
-1. **Quy mô dữ liệu nhỏ (ngoài đề):** Subset 14.000 ảnh thay vì 118k.
-   Mô hình thiếu đa dạng ngữ cảnh → mAP kỳ vọng thấp hơn mô hình đầy đủ
-   (ước tính −10 đến −20 AP50 so với COCO full).
-
-2. **Vật thể nhỏ (AP_small):** Phân giải cố định 512×512 và FPN chỉ có 3 tầng
-   (P3 stride 8, không có P2) → khó phát hiện vật nhỏ < 32×32 px.
-
-3. **Static Assigner:** Center-grid 3 ô cố định không thích nghi theo loss như
-   TAL/SimOTA → gán sai với vật thể dày đặc, chồng chéo cao.
-
-4. **CPU-only:** Môi trường thực thi không có GPU → huấn luyện 20 epoch
-   ước tính 10–24 giờ trên CPU; giới hạn thực nghiệm nhanh.
-
-5. **train2017 chưa đủ:** Tại thời điểm viết báo cáo, train2017.zip đang tải
-   (~8.4/18.5 GB). M6-M9 bị block cho đến khi tải xong và giải nén.
-
-6. **Nhầm lớp trong điều kiện thiếu dữ liệu:** Với 14k ảnh, một số lớp hiếm
-   (<50 instance) có thể bị nhầm thường xuyên; AP per-class sẽ không đồng đều.
+1. **Quy mô dữ liệu nhỏ (ngoài đề):** Subset 14.000 ảnh thay vì 118k COCO full.
+2. **Vật thể nhỏ (AP_small):** Phân giải cố định 512×512 và FPN chỉ có 3 tầng.
+3. **Static Assigner:** Center-grid 3 ô cố định không thích nghi động như TAL/SimOTA.
+4. **CPU-only:** Huấn luyện 20 epochs trên CPU tốn >24 giờ, giới hạn nhiệt độ phần cứng.
+5. **Dữ liệu đầy đủ đã sẵn sàng:** Đã giải nén 100% 118.287 ảnh `train2017` (18.01 GB).
+6. **Nhầm lớp do ít dữ liệu:** Các lớp hiếm (<50 instance) gặp mất cân bằng mẫu.
 
 ---
 

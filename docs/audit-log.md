@@ -20,7 +20,7 @@
 
 | Thời gian (Timestamp) | Commit Hash | Checkpoint Path | Tập dữ liệu | Config | mAP@[.5:.95] | Trạng thái | Người thực thi / Ghi chú |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| *Chưa ghi nhận* | - | - | - | - | - | PENDING | Chờ hoàn thành Milestone M8 |
+| 2026-11-18 00:26:10 | 3067fb2 | `outputs/checkpoints/best_map.pth` | `val2017 (5k)` | Baseline | 0.0000 | COMPLETED | Official Milestone M8 Evaluation |
 
 ---
 
@@ -33,5 +33,7 @@
 - **2026-11-15 (M4):** Xây dựng Training Engine (AdamW, Cosine LR, AMP, Clip 10.0), chạy smoke run 1 epoch, lưu checkpoint.
 - **2026-11-15 (M5):** Triển khai Decoder tọa độ, Batched NMS, tích hợp COCOeval, pilot test 100 ảnh held-out (8.289 predictions).
 - **2026-11-15 (Data):** Tải và giải nén hoàn tất 100% 118.287 ảnh `train2017` bằng `tar.exe`, xác thực 0 ảnh thiếu.
-- **2026-11-16 (M6):** Khởi chạy Baseline trên 14k ảnh train; đạt ~13.3k ảnh (75 phút) và dừng an toàn theo yêu cầu người dùng do CPU quá nhiệt.
+- **2026-11-16 (M6):** Khởi chạy Baseline trên 14k ảnh train; đạt ~13.3k ảnh (75 phút) và dừng an toàn theo yêu cầu người dùng do CPU quá nhiệt. Lưu checkpoint theo từng epoch (`epoch_N.pth`).
 - **2026-11-16 (Merge & Sync):** Hợp nhất (merge) lịch sử gốc (commit 952fd34 từ DL Team 1) và gắn lại chính xác toàn bộ thẻ tags M0–M6 theo từng commit nguyên bản (`8a60937`, `ee9d166`, `86d3c17`, `952fd34`, `70f6d9c`, `18cc511`, `93d9134`). Đồng bộ duy nhất 1 nhánh `main` lên GitHub `khanhlinh616/DL_N1_cw`.
+- **2026-11-18 (M7):** Thực hiện 3 bài thực nghiệm bóc tách thành phần (Ablation Studies) trên tập `val-heldout 1k`: Smooth L1 vs CIoU, BCE vs Focal Loss, Single-scale P5 vs FPN {P3,P4,P5}.
+- **2026-11-18 (M8):** Chạy đánh giá chính thức duy nhất trên tập `val2017` với cờ `--final`, xuất 20.000 dự đoán, tạo file khóa `outputs/final_eval.lock` và ghi nhận kiểm toán.

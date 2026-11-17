@@ -58,10 +58,12 @@ d:\cw\
 │   ├── data/         # category_mapper.py, dataset.py, transforms.py
 │   ├── models/       # backbone_fpn.py, yolo_head.py, detector.py
 │   ├── utils/        # box_ops.py, config.py, logger.py
-│   ├── train.py      # CLI huấn luyện
+│   ├── train.py      # CLI huấn luyện (lưu epoch_N.pth)
 │   ├── evaluate.py   # CLI đánh giá (COCOeval)
-│   └── demo.py       # CLI demo trực quan (M9)
-├── tests/            # 12 tệp test, 48 unit tests + 1 slow
+│   ├── demo.py       # CLI demo trực quan
+│   ├── visualize.py  # CLI trực quan hóa GT vs Pred
+│   └── ablation.py   # CLI thực nghiệm bóc tách (M7)
+├── tests/            # 14 tệp test, 54 unit tests + 1 slow
 ├── requirements.txt
 └── RULES.md
 ```
@@ -134,8 +136,10 @@ Xem chi tiết: [docs/report.md](docs/report.md)
 |:---|:---|:---|
 | M3 Overfit 10 ảnh | Loss drop | 98.21% (58.96 → 1.05) |
 | M3 Overfit 10 ảnh | Recall@IoU0.9 | 1.00 (10/10) |
-| M6 Baseline (~13.3k ảnh) | Trạng thái | Dừng an toàn (CPU thermal limit) |
-| M8 Final eval (val2017) | mAP@[.5:.95] | Chỉ chạy 1 lần với --final |
+| M6 Baseline (~13.3k ảnh) | Trạng thái | Dừng an toàn (CPU limit) + lưu `epoch_N.pth` |
+| M7 Ablation (3 bài) | Nghiệm thu | Hoàn tất trên val-heldout 1k |
+| M8 Final eval (val2017) | Trạng thái | Hoàn tất & khóa tại `final_eval.lock` |
+| Test suite | Đạt chuẩn | 54/54 tests passed 100% |
 
 > Dữ liệu COCO train2017 (118k ảnh) đã tải và giải nén 100%. Checkpoint tại `outputs/checkpoints/best_map.pth`.
 

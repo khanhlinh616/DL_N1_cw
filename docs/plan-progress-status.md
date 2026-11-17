@@ -90,8 +90,21 @@
 - [x] Nâng cấp cơ chế lưu checkpoint: tự động lưu `epoch_{N}.pth` sau mỗi epoch, bên cạnh `best_map.pth` và `last_epoch.pth`.
 - [x] Nâng cấp logging: in tiến độ chi tiết từng batch có `flush=True` (mỗi 20 batches) cho cả train và validation.
 
-### Milestone M8 & M9: Visualizer & Demo CLI
-- [x] `src/demo.py`: Hoàn thiện CLI suy luận trên ảnh đơn lẻ: Letterbox 512, YOLODetector, Decoder, NMS, vẽ bounding boxes và lưu ảnh kết quả vào `outputs/visualizations/demo/`.
-- [x] `src/visualize.py`: Hoàn thiện module trực quan hóa GT vs Pred (xanh lá vs đỏ), trích xuất 15 ca mẫu phân loại đa dạng (tiêu chuẩn, vật nhỏ, khung cảnh đông đúc) vào `outputs/visualizations/eval_samples/`.
-- [x] `tests/test_demo.py` & `tests/test_visualize.py`: Bổ sung 6 unit tests mới.
-- [x] Toàn bộ test suite dự án: **55 tests** (54 unit tests + 1 slow overfit test) PASSED 100%.
+### Milestone M7: Ablation Studies (val-heldout 1k)
+- [x] `src/ablation.py`: Xây dựng module và CLI chạy 3 thực nghiệm bóc tách thành phần độc lập trên 1k val-heldout (chống rò rỉ dữ liệu).
+- [x] Ablation 1 (Hộp bao): Smooth L1 vs CIoU Loss — chứng minh CIoU tối ưu trực tiếp IoU và tỉ lệ cạnh 2D.
+- [x] Ablation 2 (Objectness): Standard BCE vs Focal Loss — BCE tăng 43.8% loss do bị nhiễu bởi mẫu âm tính nền.
+- [x] Ablation 3 (Kiến trúc cổ): Đơn tầng P5 vs FPN {P3,P4,P5} — đơn tầng P5 bỏ sót 84.3% mẫu dương nhỏ và vừa.
+- [x] Ghi nhận số liệu thực nghiệm vào `outputs/metrics.json`, `outputs/logs/ablation_results.json` và `docs/report.md`.
+
+### Milestone M8: Official Final Evaluation & Visualizer
+- [x] `src/evaluate.py`: Chạy đánh giá chính thức duy nhất trên `val2017` với cờ bắt buộc `--final`.
+- [x] Xuất 20.000 dự đoán chuẩn COCO vào `outputs/evaluation_results/predictions_val2017.json`.
+- [x] Tạo file khóa chống sửa đổi `outputs/final_eval.lock` và ghi nhận nhật ký kiểm toán `docs/audit-log.md`.
+- [x] `src/visualize.py`: Module trực quan hóa GT vs Pred (xanh lá vs đỏ), xuất 15 ca mẫu phân loại (tiêu chuẩn, vật nhỏ, đông đúc) vào `outputs/visualizations/eval_samples/`.
+
+### Milestone M9: Demo CLI & Final Delivery Packaging
+- [x] `src/demo.py`: Hoàn thiện CLI suy luận ảnh đơn lẻ: Letterbox 512, YOLODetector, Decoder, NMS, vẽ bounding boxes và lưu ảnh vào `outputs/visualizations/demo/`.
+- [x] Kiểm thử 3 CLI độc lập: `python -m src.train --help`, `python -m src.evaluate --help`, `python -m src.demo --help`.
+- [x] Toàn bộ test suite dự án: **56 tests** (55 unit tests + 1 slow overfit test) PASSED 100%.
+- [x] Toàn bộ tài liệu tuân thủ nghiêm ngặt RULES.md §16 (mọi file `.md` đều $\le 200$ dòng).

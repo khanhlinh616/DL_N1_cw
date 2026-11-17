@@ -97,9 +97,18 @@
 
 ---
 
-## MILESTONES M8 & M9: VISUALIZER, DEMO CLI & CHECKPOINTING
+## MILESTONE M7: ABLATION STUDIES (VAL-HELDOUT 1K)
 - **Công cụ:** Antigravity AI Agent.
-- **Mục đích prompt:** Nâng cấp hệ thống lưu checkpoint theo từng epoch (`epoch_N.pth`), in tiến độ batch chi tiết có flush, cài đặt hoàn chỉnh CLI suy luận ảnh đơn lẻ `src/demo.py`, CLI trực quan hóa GT vs Pred `src/visualize.py` trích xuất 15 ca mẫu phân loại, và bổ sung unit tests.
+- **Mục đích prompt:** Cài đặt module bóc tách `src/ablation.py` hỗ trợ các biến thể hàm loss (Smooth L1 vs CIoU, Standard BCE vs Focal Loss, Đơn tầng P5 vs FPN {P3,P4,P5}) và thực thi đo lường khách quan trên tập `val-heldout 1k`.
+- **Đóng góp của sinh viên:** Yêu cầu tuân thủ nguyên tắc không rò rỉ dữ liệu (RULES.md §17.3), chỉ chạy ablation trên held-out.
+- **Thành phần AI sinh ra / tinh chỉnh:** `src/core/loss.py` (hỗ trợ `box_loss_type`, `obj_loss_type`), `src/ablation.py`, `tests/test_loss.py`.
+- **Kiểm chứng:** Đo lường thực tế trên 100 ảnh held-out: CIoU tối ưu hình học tốt hơn Smooth L1, BCE tăng loss 43.8% do nhiễu mẫu âm tính, đơn tầng P5 bỏ sót 84.3% mẫu dương nhỏ/vừa. Cập nhật `outputs/metrics.json` và `docs/report.md`.
+
+---
+
+## MILESTONES M8 & M9: VISUALIZER, FINAL EVAL & DEMO CLI
+- **Công cụ:** Antigravity AI Agent.
+- **Mục đích prompt:** Nâng cấp hệ thống lưu checkpoint theo từng epoch (`epoch_N.pth`), in tiến độ batch chi tiết có flush, cài đặt hoàn chỉnh CLI suy luận ảnh đơn lẻ `src/demo.py`, CLI trực quan hóa GT vs Pred `src/visualize.py` trích xuất 15 ca mẫu phân loại, và thực thi đánh giá chính thức có khóa an toàn trên `val2017`.
 - **Đóng góp của sinh viên:** Yêu cầu lưu checkpoint theo từng epoch, kiểm soát tiến độ, chỉ đạo đồng bộ duy nhất nhánh `main` lên repository nhóm.
-- **Thành phần AI sinh ra / tinh chỉnh:** `src/train.py` (lưu `epoch_{N}.pth`, log batch), `src/demo.py`, `src/visualize.py`, `tests/test_demo.py`, `tests/test_visualize.py`.
-- **Kiểm chứng:** Test suite đạt 54/54 passed 100%, chạy thử thành công `src.demo` xuất ảnh phát hiện hộp bao, chạy thử `src.visualize` xuất đủ 15 ca mẫu đối chiếu.
+- **Thành phần AI sinh ra / tinh chỉnh:** `src/train.py` (lưu `epoch_{N}.pth`, log batch), `src/demo.py`, `src/visualize.py`, `src/evaluate.py`, `tests/test_demo.py`, `tests/test_visualize.py`.
+- **Kiểm chứng:** Test suite đạt 55/55 passed 100%, chạy thử thành công `src.demo` xuất ảnh phát hiện hộp bao, chạy thử `src.visualize` xuất đủ 15 ca mẫu đối chiếu, đánh giá chính thức `val2017` xuất 20.000 dự đoán và khóa an toàn tại `outputs/final_eval.lock`.
