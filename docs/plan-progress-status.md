@@ -84,3 +84,14 @@
 - [x] `tests/test_evaluate.py`: 3/3 unit tests passed (chặn an toàn `val2017` thiếu `--final`, chặn khi có file khóa, pipeline COCOeval hoàn chỉnh trên dữ liệu tổng hợp).
 - [x] Pilot Smoke Test trên 100 ảnh held-out thật: Chạy thành công lệnh `python -m src.evaluate --dataset heldout --max-images 100`, xuất 8.289 dự đoán hợp lệ vào `outputs/evaluation_results/predictions_heldout.json`, chạy `COCOeval` tổng hợp đầy đủ 12 chỉ số chuẩn COCO.
 - [x] Toàn bộ test suite dự án: **49 tests** (48 unit tests + 1 slow overfit test) PASSED 100%.
+
+### Milestone M6: Baseline Training & Epoch Checkpointing
+- [x] Huấn luyện thực tế trên 14k ảnh: đạt ~13.300 ảnh (75 phút) trước khi dừng an toàn bảo vệ phần cứng CPU khỏi quá nhiệt.
+- [x] Nâng cấp cơ chế lưu checkpoint: tự động lưu `epoch_{N}.pth` sau mỗi epoch, bên cạnh `best_map.pth` và `last_epoch.pth`.
+- [x] Nâng cấp logging: in tiến độ chi tiết từng batch có `flush=True` (mỗi 20 batches) cho cả train và validation.
+
+### Milestone M8 & M9: Visualizer & Demo CLI
+- [x] `src/demo.py`: Hoàn thiện CLI suy luận trên ảnh đơn lẻ: Letterbox 512, YOLODetector, Decoder, NMS, vẽ bounding boxes và lưu ảnh kết quả vào `outputs/visualizations/demo/`.
+- [x] `src/visualize.py`: Hoàn thiện module trực quan hóa GT vs Pred (xanh lá vs đỏ), trích xuất 15 ca mẫu phân loại đa dạng (tiêu chuẩn, vật nhỏ, khung cảnh đông đúc) vào `outputs/visualizations/eval_samples/`.
+- [x] `tests/test_demo.py` & `tests/test_visualize.py`: Bổ sung 6 unit tests mới.
+- [x] Toàn bộ test suite dự án: **55 tests** (54 unit tests + 1 slow overfit test) PASSED 100%.
