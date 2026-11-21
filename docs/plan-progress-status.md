@@ -86,7 +86,7 @@
 - [x] Toàn bộ test suite dự án: **49 tests** (48 unit tests + 1 slow overfit test) PASSED 100%.
 
 ### Milestone M6: Baseline Training & Epoch Checkpointing
-- [x] Huấn luyện thực tế trên 14k ảnh: đạt ~13.300 ảnh (75 phút) trước khi dừng an toàn bảo vệ phần cứng CPU khỏi quá nhiệt.
+- [x] Huấn luyện thực tế trên 14k ảnh: hoàn tất trọn vẹn 100% 14.000 ảnh Epoch 1 (Train loss: 4.7706, Val loss: 4.7282 trên 1k held-out).
 - [x] Nâng cấp cơ chế lưu checkpoint: tự động lưu `epoch_{N}.pth` sau mỗi epoch, bên cạnh `best_map.pth` và `last_epoch.pth`.
 - [x] Nâng cấp logging: in tiến độ chi tiết từng batch có `flush=True` (mỗi 20 batches) cho cả train và validation.
 

@@ -117,11 +117,10 @@ Ground Truth: 7 objects (person×4, bicycle×2, motorcycle×1)
 
 | Chỉ số | Giá trị | Ghi chú |
 |:---|:---|:---|
-| Ảnh huấn luyện đã xử lý | ~13.300 / 14.000 ảnh (Epoch 1) | Chạy 75 phút liên tục trên CPU 12-core |
-| Trạng thái dừng | Dừng an toàn (Safe stop) | Bảo vệ phần cứng khỏi quá nhiệt CPU |
-| Smoke loss (M4) | Train: 33.28 → Val: 23.84 | Kiểm thử hội tụ vòng lặp huấn luyện |
-| Pilot evaluation (M5) | 8.289 predictions / 100 ảnh | Pipeline tích hợp COCOeval mượt mà |
-| Checkpoint lưu trữ | `outputs/checkpoints/best_map.pth` | Đã lưu và xác thực tương thích |
+| Ảnh huấn luyện đã xử lý | 14.000 / 14.000 ảnh (Epoch 1) | Hoàn tất 100% Epoch 1 trên tập train subset |
+| Train Loss (Epoch 1) | 4.7706 | Box: 0.4253, Obj: 0.3700, Cls: 2.2741 |
+| Val Loss (1k ảnh held-out) | 4.7282 | Box: 0.4158, Obj: 0.3660, Cls: 2.2830 |
+| Checkpoint lưu trữ | `epoch_1.pth`, `best_map.pth` | Đã lưu và xác thực tương thích |
 
 ### 3.3 Ablation Studies (M7 — Thực Hiện Trên 1k Val-Heldout)
 
