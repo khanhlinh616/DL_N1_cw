@@ -37,10 +37,10 @@ Nhận đầu vào là tensor logits thô từ Detection Head tại 3 tầng FPN
 
 ### 2.2 Đánh giá chính thức trên `val2017` (5.000 ảnh) — Quy tắc bất biến (§17.3)
 - **Tập `val2017` chỉ được đánh giá đúng 1 lần duy nhất ở Milestone M8.**
-- Script [`evaluate.py`](file:///c:/Project/cw_nhom1/cw_Nhom1/src/evaluate.py) bắt buộc phải có cờ `--final`. Nếu chạy trên `val2017` mà thiếu cờ này, chương trình sẽ tự động từ chối thực thi.
+- Script [`evaluate.py`](file:///d:/cw/src/evaluate.py) bắt buộc phải có cờ `--final`. Nếu chạy trên `val2017` mà thiếu cờ này, chương trình sẽ tự động từ chối thực thi.
 - Khi cờ `--final` được kích hoạt:
   1. Ghi file khóa an toàn `outputs/final_eval.lock`.
-  2. Ghi một dòng nhật ký vào [`docs/audit-log.md`](file:///c:/Project/cw_nhom1/cw_Nhom1/docs/audit-log.md) lưu trữ: thời gian chạy, commit hash, config, điểm số mAP.
+  2. Ghi một dòng nhật ký vào [`docs/audit-log.md`](file:///d:/cw/docs/audit-log.md) lưu trữ: thời gian chạy, commit hash, config, điểm số mAP.
   3. Nếu file lock đã tồn tại, chương trình sẽ ngăn chặn mọi lần chạy lại tiếp theo để loại trừ nguy cơ tinh chỉnh tham số theo tập test (Data Leakage).
 
 ### Lệnh thực thi:

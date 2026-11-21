@@ -162,6 +162,9 @@ def train_one_epoch(
     grad_clip_norm: float = 10.0,
     accumulate_grad_batches: int = 1,
     use_amp: bool = True,
+    checkpoint_dir: Optional[Path] = None,
+    save_interval: int = 50,
+    start_batch_idx: int = 0,
 ) -> Dict[str, float]:
     """Train detector for one single epoch.
 
@@ -188,6 +191,9 @@ def train_one_epoch(
     device_type = "cuda" if device.type == "cuda" else "cpu"
 
     for batch_idx, (images, targets) in enumerate(dataloader):
+        if batch_idx < start_batch_idx:
+            continue
+        bsz = images.size(0)
         images = images.to(device)
         gt_boxes = [t["boxes"].to(device) for t in targets]
         gt_labels = [t["labels"].to(device) for t in targets]
@@ -199,10 +205,15 @@ def train_one_epoch(
             loss_total, loss_dict = loss_fn(predictions, assigned_targets)
             loss_scaled = loss_total / accumulate_grad_batches
 
+        tracker.update_dict(loss_dict, n=bsz)
+        cur_loss_val = loss_total.item()
+
         if amp_enabled:
             scaler.scale(loss_scaled).backward()
         else:
             loss_scaled.backward()
+
+        del predictions, loss_scaled, loss_total, assigned_targets, images, gt_boxes, gt_labels
 
         if (batch_idx + 1) % accumulate_grad_batches == 0 or (batch_idx + 1) == len(dataloader):
             if amp_enabled:
@@ -221,18 +232,30 @@ def train_one_epoch(
                 optimizer.step()
             optimizer.zero_grad()
 
-        tracker.update_dict(loss_dict, n=images.size(0))
-
         if (batch_idx + 1) % 20 == 0 or (batch_idx + 1) == len(dataloader):
             cur = tracker.get_averages()
             print(
                 f"  [Epoch {epoch + 1} | Batch {batch_idx + 1}/{len(dataloader)}] "
-                f"loss: {loss_total.item():.4f} (avg: {cur.get('loss_total', 0.0):.4f}) "
+                f"loss: {cur_loss_val:.4f} (avg: {cur.get('loss_total', 0.0):.4f}) "
                 f"box: {cur.get('loss_box', 0.0):.4f} "
                 f"obj: {cur.get('loss_obj', 0.0):.4f} "
                 f"cls: {cur.get('loss_cls', 0.0):.4f}",
                 flush=True,
             )
+
+        if checkpoint_dir is not None and (batch_idx + 1) % save_interval == 0:
+            interim_path = Path(checkpoint_dir) / f"epoch_{epoch + 1}.pth"
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "batch_idx": batch_idx,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "train_metrics": tracker.get_averages(),
+                },
+                interim_path,
+            )
+            print(f"  [Auto-save] Checkpoint saved at batch {batch_idx + 1} -> {interim_path}", flush=True)
 
     return tracker.get_averages()
 
@@ -267,6 +290,7 @@ def validate_one_epoch(
             predictions = model(images)
             _, loss_dict = loss_fn(predictions, assigned_targets)
             tracker.update_dict(loss_dict, n=images.size(0))
+            del predictions, assigned_targets, images, gt_boxes, gt_labels
 
             if (batch_idx + 1) % 20 == 0 or (batch_idx + 1) == len(dataloader):
                 cur_val = tracker.get_averages()
@@ -359,6 +383,7 @@ def train(
     seed_override: Optional[int] = None,
     max_images: Optional[int] = None,
     device_override: Optional[str] = None,
+    num_threads_override: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Execute complete detector training pipeline."""
     config = load_yaml_config(config_path)
@@ -379,12 +404,19 @@ def train(
     else:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    if device.type == "cpu":
+        cpu_threads = num_threads_override or 4
+        torch.set_num_threads(cpu_threads)
+        print(f"[INFO] PyTorch CPU threads: {cpu_threads} (thermal optimized)")
+
     epochs = epochs_override or training_cfg.get("epochs", 20)
     batch_size = batch_size_override or training_cfg.get("batch_size", 16)
     lr = lr_override or optim_cfg.get("lr", 0.001)
     weight_decay = optim_cfg.get("weight_decay", 0.0005)
     use_amp = training_cfg.get("amp", True)
     accumulate_batches = training_cfg.get("accumulate_grad_batches", 1)
+    if device.type == "cpu" and batch_size < 16 and accumulate_batches == 1:
+        accumulate_batches = max(1, 16 // batch_size)
     grad_clip = training_cfg.get("grad_clip_norm", 10.0)
     freeze_epochs = training_cfg.get("freeze_backbone_epochs", 3)
     num_workers = 0 if sys.platform == "win32" and device.type == "cpu" else training_cfg.get("num_workers", 0)
@@ -434,15 +466,22 @@ def train(
 
     # 4. Resume from Checkpoint if specified
     start_epoch = 0
+    resume_batch_idx = 0
     best_val_loss = float("inf")
     if resume_path:
         print(f"[INFO] Resuming training from checkpoint: {resume_path}")
         ckpt_info = load_checkpoint(
             resume_path, model, optimizer, scheduler, scaler, device=device
         )
-        start_epoch = ckpt_info.get("epoch", 0) + 1
-        best_val_loss = ckpt_info.get("best_val_loss", float("inf"))
-        print(f"[INFO] Resumed at epoch {start_epoch + 1}, previous best loss: {best_val_loss:.4f}")
+        if "batch_idx" in ckpt_info and ckpt_info["batch_idx"] is not None:
+            start_epoch = ckpt_info.get("epoch", 0)
+            resume_batch_idx = ckpt_info["batch_idx"] + 1
+            print(f"[INFO] Resumed at epoch {start_epoch + 1}, batch {resume_batch_idx + 1}")
+        else:
+            start_epoch = ckpt_info.get("epoch", 0) + 1
+            resume_batch_idx = 0
+            best_val_loss = ckpt_info.get("best_val_loss", float("inf"))
+            print(f"[INFO] Resumed at epoch {start_epoch + 1}, previous best loss: {best_val_loss:.4f}")
 
     # 5. Build DataLoaders
     train_loader, val_loader = build_dataloaders(
@@ -469,6 +508,7 @@ def train(
         current_lr = optimizer.param_groups[0]["lr"]
         print(f"\n--- Epoch [{epoch + 1}/{epochs}] ({stage_str}) | LR: {current_lr:.6f} ---")
 
+        current_start_batch = resume_batch_idx if epoch == start_epoch else 0
         train_metrics = train_one_epoch(
             model=model,
             optimizer=optimizer,
@@ -480,6 +520,9 @@ def train(
             grad_clip_norm=grad_clip,
             accumulate_grad_batches=accumulate_batches,
             use_amp=use_amp,
+            checkpoint_dir=save_dir,
+            save_interval=50,
+            start_batch_idx=current_start_batch,
         )
 
         val_metrics = validate_one_epoch(
@@ -557,6 +600,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=None, help="Override random seed")
     parser.add_argument("--max-images", type=int, default=None, help="Limit number of images for quick dry-run testing")
     parser.add_argument("--device", type=str, default=None, help="Device to use ('cpu', 'cuda', or 'cuda:0')")
+    parser.add_argument("--num-threads", type=int, default=None, help="Number of PyTorch CPU threads (default: 4 on CPU)")
     return parser.parse_args()
 
 
@@ -573,6 +617,7 @@ def main() -> None:
         seed_override=args.seed,
         max_images=args.max_images,
         device_override=args.device,
+        num_threads_override=args.num_threads,
     )
 
 

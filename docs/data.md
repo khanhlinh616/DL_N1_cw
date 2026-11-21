@@ -19,7 +19,7 @@ Dữ liệu gốc từ MS COCO 2017 được phân chia theo nguyên tắc phòn
 COCO có 80 danh mục đối tượng nhưng dải `category_id` trải dài từ 1 đến 90 (có 10 ID bị khuyết: 12, 26, 29, 30, 45, 66, 68, 69, 71, 83).
 - **Lớp liên tục cho nơ-ron:** $\text{class\_idx} \in [0, 79]$.
 - **Lớp COCO chuẩn:** $\text{category\_id} \in [1, 90]$.
-- Module [`category_mapper.py`](file:///c:/Project/cw_nhom1/cw_Nhom1/src/data/category_mapper.py) cung cấp hàm chuyển đổi 2 chiều:
+- Module [`category_mapper.py`](file:///d:/cw/src/data/category_mapper.py) cung cấp hàm chuyển đổi 2 chiều:
   - `coco_to_model(cat_id)`: Ánh xạ từ COCO sang index nội bộ huấn luyện.
   - `model_to_coco(cls_idx)`: Ánh xạ từ index nội bộ sang COCO Category ID chuẩn xuất file đánh giá.
 
