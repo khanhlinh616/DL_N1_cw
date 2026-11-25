@@ -175,11 +175,13 @@ Kết quả: **55/55 unit tests passed**, 1 slow overfit test passed.
 
 ### M6 — Baseline Training (14k ảnh, CPU)
 
-| Epoch | Train Loss | Val Loss (1k) |
-|:---|:---:|:---:|
-| 1 | 4.7706 | 4.7282 |
-| 2 (best) | 4.1866 | 4.4330 |
-| 3 | _đang chạy, dừng tại Batch 1500/3474_ | — |
+| Epoch | Train Loss | Val Loss (1k) | Trạng thái |
+|:---|:---:|:---:|:---|
+| 1 | 4.7706 | 4.7282 | ✅ Hoàn thành |
+| 2 | 4.1866 | 4.4330 | ✅ Hoàn thành (best checkpoint) |
+| 3 | 4.5015* | — | ⏸ Dừng tại Batch 1499/3474 (43.1%) |
+
+> \*avg loss Epoch 3 tính đến Batch 1499. Checkpoint: `outputs/checkpoints/epoch_3.pth` (16:16, 25/11/2026).
 
 ### M7 — Ablation Study (100 ảnh held-out)
 
@@ -208,7 +210,7 @@ Kết quả: **55/55 unit tests passed**, 1 slow overfit test passed.
 - Chỉ huấn luyện trên **14k ảnh** (tập con), không đủ để hội tụ mAP cao trên val2017.
 - **CPU-only**: 1 epoch ≈ 30–50 phút (batch=4, num-threads=4); không thực tế cho full training.
 - Kích thước ảnh cố định **512×512**; không hỗ trợ multi-scale inference.
-- Epoch 3 đang dở: checkpoint `epoch_3.pth` lưu tại Batch 1499 (43.2% epoch).
+- **Epoch 3 chưa hoàn thành:** checkpoint `epoch_3.pth` dừng tại Batch 1499/3474 (43.1%), avg loss 4.5015. Cần resume để hoàn tất.
 
 ---
 
