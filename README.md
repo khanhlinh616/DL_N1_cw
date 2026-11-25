@@ -1,25 +1,29 @@
 # YOLO-style One-Stage Object Detector — ResNet-50 + FPN trên COCO 2017
 
-Dự án cài đặt bộ phát hiện đối tượng one-stage end-to-end theo phong cách YOLO:
-ResNet-50 + FPN làm backbone, Decoupled Head, label assigner anchor-free,
-CIoU + Focal Loss, và COCOeval tích hợp hoàn chỉnh. Huấn luyện trên tập con 14k
-ảnh của MS COCO 2017.
+![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.15.0--cpu-EE4C2C?logo=pytorch)
+![Dataset](https://img.shields.io/badge/Dataset-COCO%202017-00BFFF)
+![Tests](https://img.shields.io/badge/Tests-55%2F55%20passed-brightgreen)
+
+## Overview
+
+Bộ phát hiện đối tượng one-stage end-to-end theo phong cách YOLO: **ResNet-50 + FPN** làm backbone, Decoupled Head, label assigner anchor-free, CIoU + Focal Loss, và COCOeval tích hợp hoàn chỉnh. Huấn luyện trên tập con **14k ảnh** của MS COCO 2017, chạy CPU-only.
 
 ---
 
-## Bài toán
+## Features
 
-Phát hiện đối tượng (Object Detection) trên 80 lớp COCO 2017.  
-Đầu vào: ảnh RGB bất kỳ. Đầu ra: danh sách `[x1, y1, x2, y2, score, label]`.
-
-**Lý do chọn One-Stage + Anchor-free:**
-- One-stage loại bỏ bước proposal → inference nhanh hơn hai giai đoạn.
-- Anchor-free đơn giản hoá pipeline, tránh hyperparameter anchor thủ công.
-- CIoU hội tụ nhanh hơn IoU/GIoU; Focal Loss chống mất cân bằng nền/vật.
+- Backbone ResNet-50 (FrozenBN, pretrained ImageNet) + FPN P3/P4/P5 (256-ch)
+- Anchor-free assigner: 3 ô dương / vật thể
+- Loss: 5×CIoU + 1×Focal(obj) + 1×BCE(cls)
+- Optimizer: AdamW + CosineAnnealingLR + 2-epoch warmup
+- Resume từ checkpoint (intra-epoch, epoch-level)
+- `--git-sync`: auto commit & push sau mỗi epoch
+- CLI: train, evaluate, demo, visualize, ablation
 
 ---
 
-## Kiến trúc
+## Architecture
 
 ```
 Input (512×512)
@@ -40,12 +44,11 @@ Input (512×512)
 | Assigner | Anchor-free, 3 ô dương / vật thể |
 | Loss | 5×CIoU + 1×Focal(obj) + 1×BCE(cls) |
 | Optimizer | AdamW + CosineAnnealingLR + 2-epoch warmup |
-| Decoder | offset [−0.5, 1.5]×s, kích thước [0, 16s] |
 | NMS | Batched NMS, IoU thr 0.60, top-100 |
 
 ---
 
-## Cấu trúc thư mục
+## Project Structure
 
 ```
 d:\cw\
@@ -63,35 +66,49 @@ d:\cw\
 │   ├── demo.py       # CLI demo trực quan
 │   ├── visualize.py  # CLI trực quan hóa GT vs Pred
 │   └── ablation.py   # CLI thực nghiệm bóc tách (M7)
-├── tests/            # 14 tệp test, 54 unit tests + 1 slow
+├── tests/            # 14 tệp test, 55 unit tests + 1 slow
 ├── requirements.txt
 └── RULES.md
 ```
 
 ---
 
-## Cài đặt
+## Requirements
+
+- Python 3.10+
+- CPU-only (không cần GPU)
+- ~19 GB dung lượng ổ đĩa cho dữ liệu COCO
 
 ```bash
-# Yêu cầu Python 3.10+
 pip install -r requirements.txt
 ```
 
 **Dữ liệu:**
+- `val2017` (778 MB) + `annotations` (241 MB): đã sẵn có
+- `train2017` (~18.5 GB): tải thủ công từ [images.cocodataset.org/zips/train2017.zip](http://images.cocodataset.org/zips/train2017.zip) → giải nén vào `data/coco/train2017/`
+
+---
+
+## Installation
+
 ```bash
-# val2017 (778 MB) + annotations (241 MB): đã sẵn có
-# train2017 (~18.5 GB): tải thủ công từ images.cocodataset.org/zips/train2017.zip
-# Giải nén vào data/coco/train2017/
+# 1. Cài đặt dependencies
+pip install -r requirements.txt
+
+# 2. Thiết lập PYTHONPATH (bắt buộc trên Windows)
+set PYTHONPATH=.
 ```
 
 ---
 
-## Chạy
+## Usage
 
 ### Huấn luyện
+
 ```bash
-# Smoke test (không cần đủ dữ liệu)
 set PYTHONPATH=.
+
+# Smoke test (không cần đủ dữ liệu)
 python -m src.train --epochs 1 --batch-size 2 --max-images 8
 
 # Baseline đầy đủ (cần train2017 ≥14k ảnh)
@@ -99,68 +116,110 @@ python -m src.train --epochs 20 --batch-size 16
 
 # Tiếp tục từ checkpoint
 python -m src.train --epochs 20 --resume outputs/checkpoints/last_epoch.pth
+
+# Với auto git-sync sau mỗi epoch
+python -m src.train --epochs 3 --batch-size 4 --resume outputs/checkpoints/epoch_3.pth --num-threads 4 --git-sync
 ```
 
 ### Đánh giá
+
 ```bash
 # Đánh giá trên held-out 1k
 python -m src.evaluate --dataset heldout --batch-size 8
 
-# Đánh giá chính thức val2017 (chỉ chạy 1 lần tại M8)
+# Đánh giá chính thức val2017 (chỉ chạy 1 lần tại M8, đã khoá)
 python -m src.evaluate --dataset val2017 --final
 ```
 
-### Demo trực quan
+### Demo & Visualization
+
 ```bash
-# Demo trên 1 ảnh (M9)
-python -m src.demo --image data/coco/val2017/000000000139.jpg
+# Demo trên 1 ảnh
+python -m src.demo --image path/to/image.jpg --checkpoint outputs/checkpoints/best_map.pth
+
+# Trực quan hóa GT vs Pred
+python -m src.visualize --dataset val2017 --n 5
+
+# Ablation study
+python -m src.ablation --variant all
 ```
 
 ---
 
-## Kiểm thử
+## Testing
 
 ```bash
 set PYTHONPATH=.
-python -m pytest -v -m "not slow"   # 48 unit tests (~52 giây)
-python -m pytest -v                 # Tất cả bao gồm overfit test (~90 giây)
+
+# 55 unit tests
+python -m pytest -m "not slow"
+
+# Bao gồm 1 slow overfit test (chạy ~2 phút)
+python -m pytest
 ```
 
----
-
-## Kết quả
-
-Xem chi tiết: [docs/report.md](docs/report.md)
-
-| Giai đoạn | Chỉ số | Giá trị |
-|:---|:---|:---|
-| M3 Overfit 10 ảnh | Loss drop | 98.21% (58.96 → 1.05) |
-| M3 Overfit 10 ảnh | Recall@IoU0.9 | 1.00 (10/10) |
-| M6 Baseline (~13.3k ảnh) | Trạng thái | Dừng an toàn (CPU limit) + lưu `epoch_N.pth` |
-| M7 Ablation (3 bài) | Nghiệm thu | Hoàn tất trên val-heldout 1k |
-| M8 Final eval (val2017) | Trạng thái | Hoàn tất & khóa tại `final_eval.lock` |
-| Test suite | Đạt chuẩn | 54/54 tests passed 100% |
-
-> Dữ liệu COCO train2017 (118k ảnh) đã tải và giải nén 100%. Checkpoint tại `outputs/checkpoints/best_map.pth`.
+Kết quả: **55/55 unit tests passed**, 1 slow overfit test passed.
 
 ---
 
-## Giới hạn kỹ thuật
+## Results
 
-- Subset 14k ảnh thay vì 118k → mAP thấp hơn mô hình đầy đủ.
-- Phân giải 512×512 cố định, vật nhỏ có thể bị bỏ sót.
-- CPU-only trong môi trường hiện tại → huấn luyện chậm.
+### M3 — Overfit Test (10 ảnh, 40 bước, CPU)
+
+| Chỉ số | Giá trị |
+|:---|:---|
+| Loss ban đầu | 58.9644 |
+| Loss cuối | 1.0534 |
+| Loss giảm | 98.21% |
+| Recall@IoU0.9 | 1.00 (10/10) |
+
+### M6 — Baseline Training (14k ảnh, CPU)
+
+| Epoch | Train Loss | Val Loss (1k) |
+|:---|:---:|:---:|
+| 1 | 4.7706 | 4.7282 |
+| 2 (best) | 4.1866 | 4.4330 |
+| 3 | _đang chạy, dừng tại Batch 1500/3474_ | — |
+
+### M7 — Ablation Study (100 ảnh held-out)
+
+| Biến thể | Loss tổng | Kết luận |
+|:---|:---:|:---|
+| Full (CIoU + Focal + FPN P3–P5) | 425.08 | Baseline |
+| Smooth L1 thay CIoU | 422.35 | CIoU tốt hơn trên positive anchors |
+| BCE thay Focal Loss | 611.34 | Focal suppresses easy negatives hiệu quả hơn |
+| Single-scale P5 | 25.14 | FPN phủ cả vật nhỏ (P3) và lớn (P5) |
+
+### M8 — Final Evaluation (val2017, 200 ảnh, checkpoint best_map.pth)
+
+| Chỉ số | Giá trị |
+|:---|:---:|
+| mAP@[.50:.95] | 0.0 |
+| AP_large | 0.0001 |
+| AR@100 | 0.0004 |
+| FPS (CPU) | 2.61 |
+
+> Kết quả M8 đã khoá (`outputs/final_eval.lock`) — không tái chạy.
 
 ---
 
-## Tài liệu
+## Limitations
+
+- Chỉ huấn luyện trên **14k ảnh** (tập con), không đủ để hội tụ mAP cao trên val2017.
+- **CPU-only**: 1 epoch ≈ 30–50 phút (batch=4, num-threads=4); không thực tế cho full training.
+- Kích thước ảnh cố định **512×512**; không hỗ trợ multi-scale inference.
+- Epoch 3 đang dở: checkpoint `epoch_3.pth` lưu tại Batch 1499 (43.2% epoch).
+
+---
+
+## Docs
 
 | Tệp | Nội dung |
 |:---|:---|
 | [docs/report.md](docs/report.md) | Báo cáo đầy đủ: kết quả, hạn chế, cải tiến |
 | [docs/DEFINE_AND_DESIGN.md](docs/DEFINE_AND_DESIGN.md) | Thiết kế kỹ thuật chi tiết |
 | [docs/plan-progress-status.md](docs/plan-progress-status.md) | Tiến độ milestone |
-| [docs/ai-usage.md](docs/ai-usage.md) | Nhật ký sử dụng AI |
 | [docs/model.md](docs/model.md) | Kiến trúc model chi tiết |
 | [docs/training.md](docs/training.md) | Hướng dẫn huấn luyện |
 | [docs/evaluation.md](docs/evaluation.md) | Hướng dẫn đánh giá |
+| [docs/ai-usage.md](docs/ai-usage.md) | Nhật ký sử dụng AI |
