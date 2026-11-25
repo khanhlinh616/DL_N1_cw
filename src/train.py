@@ -282,7 +282,15 @@ def load_checkpoint(
     if optimizer is not None and "optimizer_state_dict" in ckpt:
         optimizer.load_state_dict(ckpt["optimizer_state_dict"])
     if scheduler is not None and "scheduler_state_dict" in ckpt:
-        scheduler.load_state_dict(ckpt["scheduler_state_dict"])
+        try:
+            scheduler.load_state_dict(ckpt["scheduler_state_dict"])
+        except Exception as e:
+            print(f"[WARN] Could not restore scheduler state dict ({e}); stepping scheduler to epoch {ckpt.get('epoch', 0) + 1}.")
+            for _ in range(ckpt.get("epoch", 0) + 1):
+                try:
+                    scheduler.step()
+                except Exception:
+                    pass
     if scaler is not None and "scaler_state_dict" in ckpt and ckpt["scaler_state_dict"] is not None:
         scaler.load_state_dict(ckpt["scaler_state_dict"])
     return ckpt
