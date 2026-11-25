@@ -1,8 +1,8 @@
 # TIẾN ĐỘ THỰC HIỆN DỰ ÁN (PLAN & PROGRESS STATUS)
 
-* **Cập nhật lần cuối:** 2026-11-25 15:19
+* **Cập nhật lần cuối:** 2026-11-25 16:16
 * **Trạng thái tổng thể:** Đang huấn luyện Epoch 3; Đã hoàn thành 100% Epoch 1 & Epoch 2 baseline.
-* **Tiến độ trực tiếp:** Epoch 3: Batch 1000/3474 (28.8%) | Loss: 4.5763 (box: 0.4154, obj: 0.3672, cls: 2.1323)
+* **Tiến độ trực tiếp:** Epoch 3: Batch 1500/3474 (43.2%) | Loss: 4.5015 (box: 0.4120, obj: 0.3648, cls: 2.0765)
 
 ---
 
