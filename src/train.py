@@ -312,6 +312,7 @@ def train_one_epoch(
     start_batch_idx: int = 0,
     git_sync: bool = False,
     git_sync_interval: int = 500,
+    initial_metrics: Optional[Dict[str, float]] = None,
 ) -> Dict[str, float]:
     """Train detector for one single epoch.
 
@@ -332,6 +333,10 @@ def train_one_epoch(
     """
     model.train()
     tracker = MetricTracker()
+    if initial_metrics and start_batch_idx > 0:
+        init_n = start_batch_idx * getattr(dataloader, "batch_size", 4)
+        for k, v in initial_metrics.items():
+            tracker.update(k, v, n=init_n)
     optimizer.zero_grad()
 
     amp_enabled = use_amp and device.type == "cuda"
@@ -621,6 +626,7 @@ def train(
     start_epoch = 0
     resume_batch_idx = 0
     best_val_loss = float("inf")
+    initial_train_metrics: Optional[Dict[str, float]] = None
     if resume_path:
         print(f"[INFO] Resuming training from checkpoint: {resume_path}")
         ckpt_info = load_checkpoint(
@@ -629,7 +635,22 @@ def train(
         if "batch_idx" in ckpt_info and ckpt_info["batch_idx"] is not None:
             start_epoch = ckpt_info.get("epoch", 0)
             resume_batch_idx = ckpt_info["batch_idx"] + 1
+            initial_train_metrics = ckpt_info.get("train_metrics")
             print(f"[INFO] Resumed at epoch {start_epoch + 1}, batch {resume_batch_idx + 1}")
+            if "scheduler_state_dict" not in ckpt_info:
+                for _ in range(start_epoch):
+                    try:
+                        scheduler.step()
+                    except Exception:
+                        pass
+            best_map_file = save_dir / best_name
+            if best_map_file.exists():
+                try:
+                    b_ckpt = torch.load(best_map_file, map_location="cpu")
+                    best_val_loss = b_ckpt.get("best_val_loss", float("inf"))
+                    print(f"[INFO] Loaded previous best validation loss from {best_name}: {best_val_loss:.4f}")
+                except Exception:
+                    pass
         else:
             start_epoch = ckpt_info.get("epoch", 0) + 1
             resume_batch_idx = 0
@@ -678,6 +699,7 @@ def train(
             start_batch_idx=current_start_batch,
             git_sync=git_sync,
             git_sync_interval=git_sync_interval,
+            initial_metrics=initial_train_metrics if epoch == start_epoch else None,
         )
 
         val_metrics = validate_one_epoch(
