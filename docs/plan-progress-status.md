@@ -1,8 +1,8 @@
 # TIẾN ĐỘ THỰC HIỆN DỰ ÁN (PLAN & PROGRESS STATUS)
 
-* **Cập nhật lần cuối:** 2026-11-25 16:20
+* **Cập nhật lần cuối:** 2026-11-25 23:40
 * **Trạng thái tổng thể:** Tạm dừng an toàn Epoch 3 lúc 16h20 theo yêu cầu; Đã hoàn thành 100% Epoch 1 & Epoch 2.
-* **Tiến độ trực tiếp:** Epoch 3 (Tạm dừng): Batch 1500/3474 (43.2%) | Loss: 4.5015 (box: 0.4120, obj: 0.3648, cls: 2.0765)
+* **Tiến độ trực tiếp:** Epoch 3: Batch 2000/3474 (57.6%) | Loss: 4.4581 (box: 0.4119, obj: 0.3627, cls: 2.0361)
 
 ---
 
