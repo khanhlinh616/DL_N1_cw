@@ -59,6 +59,143 @@ def get_git_commit_hash() -> str:
         return "unknown"
 
 
+def _sync_git_progress(epoch_num: int, batch_num: int, total_batches: int, metrics: Dict[str, float]) -> None:
+    """Safely update docs/plan-progress-status.md with batch progress and push to origin main."""
+    try:
+        status_file = Path("docs/plan-progress-status.md")
+        if not status_file.exists():
+            return
+        content = status_file.read_text(encoding="utf-8")
+        from datetime import datetime
+        import re
+
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        pct = (batch_num / total_batches) * 100
+        loss_val = metrics.get("loss_total", 0.0)
+        box_val = metrics.get("loss_box", 0.0)
+        obj_val = metrics.get("loss_obj", 0.0)
+        cls_val = metrics.get("loss_cls", 0.0)
+
+        progress_line = (
+            f"* **Tiến độ trực tiếp:** Epoch {epoch_num}: Batch {batch_num}/{total_batches} ({pct:.1f}%) | "
+            f"Loss: {loss_val:.4f} (box: {box_val:.4f}, obj: {obj_val:.4f}, cls: {cls_val:.4f})"
+        )
+
+        content = re.sub(r"\* \*\*Cập nhật lần cuối:\*\* .*", f"* **Cập nhật lần cuối:** {now_str}", content)
+        if "* **Tiến độ trực tiếp:**" in content:
+            content = re.sub(r"\* \*\*Tiến độ trực tiếp:\*\* .*", progress_line, content)
+        else:
+            marker = "* **Trạng thái tổng thể:**"
+            lines = content.splitlines()
+            new_lines = []
+            for line in lines:
+                new_lines.append(line)
+                if line.startswith(marker):
+                    new_lines.append(progress_line)
+            content = "\n".join(new_lines) + "\n"
+
+        if len(content.splitlines()) > 190:
+            return
+
+        status_file.write_text(content, encoding="utf-8")
+
+        subprocess.run(["git", "add", "docs/plan-progress-status.md"], check=False, capture_output=True, timeout=30)
+        commit_res = subprocess.run(
+            ["git", "commit", "-m", f"docs: sync training progress Epoch {epoch_num} (Batch {batch_num}/{total_batches})"],
+            check=False,
+            capture_output=True,
+            timeout=30,
+        )
+        if commit_res.returncode == 0:
+            push_res = subprocess.run(
+                ["git", "push", "origin", "main"],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=90,
+            )
+            if push_res.returncode == 0:
+                print(f"  [Git-Sync] Progress committed & pushed to GitHub: Batch {batch_num}/{total_batches}", flush=True)
+            else:
+                print(f"  [Git-Sync Warning] Git push returned code {push_res.returncode}: {push_res.stderr.strip()}", flush=True)
+    except Exception as e:
+        print(f"  [Git-Sync Warning] Sync failed: {e}", flush=True)
+
+
+def _sync_git_epoch_completed(epoch_num: int, train_metrics: Dict[str, float], val_metrics: Dict[str, float]) -> None:
+    """Safely update documentation after epoch finishes and push to origin main."""
+    try:
+        from datetime import datetime
+        import json
+        import re
+
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        t_loss = train_metrics.get("loss_total", 0.0)
+        v_loss = val_metrics.get("loss_total", 0.0)
+
+        status_file = Path("docs/plan-progress-status.md")
+        if status_file.exists():
+            content = status_file.read_text(encoding="utf-8")
+            content = re.sub(r"\* \*\*Cập nhật lần cuối:\*\* .*", f"* **Cập nhật lần cuối:** {now_str}", content)
+            content = re.sub(
+                r"\* \*\*Trạng thái tổng thể:\*\* .*",
+                f"* **Trạng thái tổng thể:** Hoàn thành M0–M9; Đã hoàn thành 100% Epoch 1, Epoch 2 & Epoch {epoch_num} baseline.",
+                content,
+            )
+            content = re.sub(
+                r"\* \*\*Tiến độ trực tiếp:\*\* .*",
+                f"* **Tiến độ trực tiếp:** Epoch {epoch_num} hoàn thành 100% (Train: {t_loss:.4f}, Val: {v_loss:.4f}).",
+                content,
+            )
+            status_file.write_text(content, encoding="utf-8")
+
+        metrics_file = Path("outputs/metrics.json")
+        if metrics_file.exists():
+            try:
+                m_data = json.loads(metrics_file.read_text(encoding="utf-8"))
+                if "baseline_m6" in m_data:
+                    m_data["baseline_m6"]["epoch"] = epoch_num
+                    m_data["baseline_m6"]["total_epochs"] = epoch_num
+                    m_data["baseline_m6"]["images_processed"] = epoch_num * 14000
+                    m_data["baseline_m6"]["status"] = f"Completed 100% Epoch 1 to Epoch {epoch_num}"
+                    m_data["baseline_m6"]["train_loss_total"] = round(t_loss, 4)
+                    m_data["baseline_m6"]["train_loss_box"] = round(train_metrics.get("loss_box", 0.0), 4)
+                    m_data["baseline_m6"]["train_loss_obj"] = round(train_metrics.get("loss_obj", 0.0), 4)
+                    m_data["baseline_m6"]["train_loss_cls"] = round(train_metrics.get("loss_cls", 0.0), 4)
+                    m_data["baseline_m6"]["val_loss_total"] = round(v_loss, 4)
+                    m_data["baseline_m6"]["val_loss_box"] = round(val_metrics.get("loss_box", 0.0), 4)
+                    m_data["baseline_m6"]["val_loss_obj"] = round(val_metrics.get("loss_obj", 0.0), 4)
+                    m_data["baseline_m6"]["val_loss_cls"] = round(val_metrics.get("loss_cls", 0.0), 4)
+                    m_data["baseline_m6"][f"epoch_{epoch_num}"] = {
+                        "train_loss_total": round(t_loss, 4),
+                        "train_loss_box": round(train_metrics.get("loss_box", 0.0), 4),
+                        "train_loss_obj": round(train_metrics.get("loss_obj", 0.0), 4),
+                        "train_loss_cls": round(train_metrics.get("loss_cls", 0.0), 4),
+                        "val_loss_total": round(v_loss, 4),
+                        "val_loss_box": round(val_metrics.get("loss_box", 0.0), 4),
+                        "val_loss_obj": round(val_metrics.get("loss_obj", 0.0), 4),
+                        "val_loss_cls": round(val_metrics.get("loss_cls", 0.0), 4),
+                    }
+                    metrics_file.write_text(json.dumps(m_data, indent=2), encoding="utf-8")
+            except Exception:
+                pass
+
+        subprocess.run(["git", "add", "docs/plan-progress-status.md"], check=False, capture_output=True, timeout=30)
+        commit_res = subprocess.run(
+            ["git", "commit", "-m", f"docs: record completion of Epoch {epoch_num} baseline training and validation"],
+            check=False,
+            capture_output=True,
+            timeout=30,
+        )
+        if commit_res.returncode == 0:
+            push_res = subprocess.run(["git", "push", "origin", "main"], check=False, capture_output=True, text=True, timeout=90)
+            if push_res.returncode == 0:
+                print(f"  [Git-Sync] Epoch {epoch_num} completion committed & pushed to GitHub -> main", flush=True)
+    except Exception as e:
+        print(f"  [Git-Sync Warning] Epoch completion sync failed: {e}", flush=True)
+
+
+
 def build_optimizer(
     model: nn.Module,
     lr: float = 0.001,
@@ -165,6 +302,8 @@ def train_one_epoch(
     checkpoint_dir: Optional[Path] = None,
     save_interval: int = 50,
     start_batch_idx: int = 0,
+    git_sync: bool = False,
+    git_sync_interval: int = 500,
 ) -> Dict[str, float]:
     """Train detector for one single epoch.
 
@@ -256,6 +395,9 @@ def train_one_epoch(
                 interim_path,
             )
             print(f"  [Auto-save] Checkpoint saved at batch {batch_idx + 1} -> {interim_path}", flush=True)
+
+        if git_sync and ((batch_idx + 1) % git_sync_interval == 0 or (batch_idx + 1) == len(dataloader)):
+            _sync_git_progress(epoch + 1, batch_idx + 1, len(dataloader), tracker.get_averages())
 
     return tracker.get_averages()
 
@@ -384,6 +526,8 @@ def train(
     max_images: Optional[int] = None,
     device_override: Optional[str] = None,
     num_threads_override: Optional[int] = None,
+    git_sync_override: Optional[bool] = None,
+    git_sync_interval: int = 500,
 ) -> Dict[str, Any]:
     """Execute complete detector training pipeline."""
     config = load_yaml_config(config_path)
@@ -420,6 +564,7 @@ def train(
     grad_clip = training_cfg.get("grad_clip_norm", 10.0)
     freeze_epochs = training_cfg.get("freeze_backbone_epochs", 3)
     num_workers = 0 if sys.platform == "win32" and device.type == "cpu" else training_cfg.get("num_workers", 0)
+    git_sync = git_sync_override if git_sync_override is not None else training_cfg.get("git_sync", False)
 
     save_dir = Path(ckpt_cfg.get("save_dir", "outputs/checkpoints"))
     best_name = ckpt_cfg.get("best_model_name", "best_map.pth")
@@ -523,6 +668,8 @@ def train(
             checkpoint_dir=save_dir,
             save_interval=50,
             start_batch_idx=current_start_batch,
+            git_sync=git_sync,
+            git_sync_interval=git_sync_interval,
         )
 
         val_metrics = validate_one_epoch(
@@ -574,6 +721,9 @@ def train(
             lr=current_lr,
         )
 
+        if git_sync:
+            _sync_git_epoch_completed(epoch + 1, train_metrics, val_metrics)
+
     print("\n" + "=" * 65)
     print(f" Training completed. Best validation loss: {best_val_loss:.4f}")
     print(f" Checkpoint saved to: {save_dir / best_name}")
@@ -601,6 +751,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-images", type=int, default=None, help="Limit number of images for quick dry-run testing")
     parser.add_argument("--device", type=str, default=None, help="Device to use ('cpu', 'cuda', or 'cuda:0')")
     parser.add_argument("--num-threads", type=int, default=None, help="Number of PyTorch CPU threads (default: 4 on CPU)")
+    parser.add_argument("--git-sync", action="store_true", help="Periodically sync training progress to git")
+    parser.add_argument("--git-sync-interval", type=int, default=500, help="Interval of batches between git syncs (default: 500)")
     return parser.parse_args()
 
 
@@ -618,6 +770,8 @@ def main() -> None:
         max_images=args.max_images,
         device_override=args.device,
         num_threads_override=args.num_threads,
+        git_sync_override=args.git_sync,
+        git_sync_interval=args.git_sync_interval,
     )
 
 

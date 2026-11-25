@@ -77,6 +77,14 @@ class TrainingLogger:
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.history_file = self.log_dir / "train_history.json"
         self.history: List[Dict[str, Any]] = []
+        if self.history_file.exists():
+            try:
+                with open(self.history_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        self.history = data
+            except Exception:
+                self.history = []
 
     def log_epoch(self, epoch: int, train_metrics: Dict[str, float], val_metrics: Optional[Dict[str, float]] = None, lr: Optional[float] = None) -> None:
         """Log one completed epoch and append to history file."""
@@ -89,7 +97,16 @@ class TrainingLogger:
         if lr is not None:
             entry["lr"] = lr
 
-        self.history.append(entry)
+        # Update if epoch already in history, else append
+        updated = False
+        for i, item in enumerate(self.history):
+            if item.get("epoch") == epoch:
+                self.history[i] = entry
+                updated = True
+                break
+        if not updated:
+            self.history.append(entry)
+
         with open(self.history_file, "w", encoding="utf-8") as f:
             json.dump(self.history, f, indent=2)
 
