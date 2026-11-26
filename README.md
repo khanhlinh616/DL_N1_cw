@@ -102,7 +102,7 @@ python -m pytest                 # Bao gồm 1 slow overfit test (~2 phút)
 | 1 | 4.7706 | 4.7282 | ✅ Hoàn thành |
 | 2 | 4.1866 | 4.4330 | ✅ Hoàn thành |
 | 3 | 4.3168 | **4.1814** | ✅ Hoàn thành (`best_map.pth`) |
-| 4 | 5.3979* | — | ⏸ Dừng tại Batch 1000/3474 (28.8%, hạ nhiệt CPU) |
+| 4 | 5.3979* | — | 🔄 Đang chạy tiếp từ Batch 1001 (dự kiến dừng 00h20) |
 
 > \*avg loss Epoch 4 tính đến Batch 1000. Checkpoint: `outputs/checkpoints/epoch_4.pth`.
 
