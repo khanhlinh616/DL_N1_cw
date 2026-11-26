@@ -1,8 +1,8 @@
 # TIẾN ĐỘ THỰC HIỆN DỰ ÁN (PLAN & PROGRESS STATUS)
 
 * **Cập nhật lần cuối:** 2026-11-26 22:16
-* **Trạng thái tổng thể:** Hoàn thành M0–M9; Đã hoàn thành 100% Epoch 1, Epoch 2 & Epoch 3 baseline.
-* **Tiến độ trực tiếp:** Epoch 3 hoàn thành 100% (Train: 4.3168, Val: 4.1814).
+* **Trạng thái tổng thể:** Hoàn thành M0–M9; Đã hoàn thành 100% Epoch 1, 2 & 3 baseline (đang chạy tiếp Epoch 4).
+* **Tiến độ trực tiếp:** Epoch 3 hoàn thành 100% (Train: 4.3168, Val: 4.1814 — `best_map.pth`); đang chạy Epoch 4 (Backbone UNFROZEN).
 
 ---
 
@@ -16,7 +16,7 @@
 | **M3** | Assigner (3 ô) + MultiTaskLoss (CIoU, Focal, BCE) | Unit test loss, Overfit 10 ảnh: loss mượt về 0, recall ≈ 1.0 | **Hoàn thành** |
 | **M4** | Training engine (AdamW, Cosine LR, AMP, clip 10) | Chạy 1 epoch thử nghiệm, lưu checkpoint theo val-heldout | **Hoàn thành** |
 | **M5** | Decoder (offset [-0.5, 1.5], dải 16s), Batched NMS | Smoke test 100 ảnh held-out, xuất JSON hợp lệ, chạy COCOeval | **Hoàn thành** |
-| **M6** | Train baseline trên 14k ảnh train | Đang chạy Epoch 3 (Epoch 1 & 2 đã hoàn tất: Train 4.1866, Val 4.4330) | **Đang chạy Epoch 3** |
+| **M6** | Train baseline trên 14k ảnh train | Đã hoàn thành Epoch 1–3 (Ep3 Val: 4.1814, `best_map.pth`), đang chạy Epoch 4 | **Đang chạy Epoch 4** |
 | **M7** | 3 bài Ablation studies (mỗi bài 5-10 epochs) | Bảng so sánh 3 ablation chỉ đo trên val-heldout 1k | **Hoàn thành** |
 | **M8** | Final evaluation trên val2017 (5k) + Visualizer | Chạy COCOeval đúng 1 lần trên val2017, xuất ≥15 ảnh (tốt & 3 ca lỗi) | **Hoàn thành** |
 | **M9** | Đóng gói, dọn dẹp, kiểm tra CLI và tài liệu | CLI train/eval/demo chạy độc lập mượt mà, PEP8 chuẩn, 55/55 unit tests pass | **Hoàn thành** |
@@ -87,7 +87,7 @@
 - [x] Toàn bộ test suite dự án: **49 tests** (48 unit tests + 1 slow overfit test) PASSED 100%.
 
 ### Milestone M6: Baseline Training & Epoch Checkpointing
-- [x] Huấn luyện thực tế trên 14k ảnh: hoàn tất trọn vẹn 100% Epoch 1 và Epoch 2 (Epoch 1 Train: 4.7706, Val: 4.7282; Epoch 2 Train: 4.1866, Val: 4.4330 trên 1k held-out).
+- [x] Huấn luyện thực tế trên 14k ảnh: hoàn tất trọn vẹn Epoch 1, 2 & 3 (Ep1 Train 4.7706 / Val 4.7282; Ep2 Train 4.1866 / Val 4.4330; Ep3 Train 4.3168 / Val 4.1814). Đang chạy tiếp Epoch 4 (mở khóa backbone).
 - [x] Nâng cấp cơ chế lưu checkpoint: tự động lưu `epoch_{N}.pth` sau mỗi epoch và mỗi 50 batch, bên cạnh `best_map.pth` và `last_epoch.pth`.
 - [x] Nâng cấp logging: in tiến độ chi tiết từng batch có `flush=True` (mỗi 20 batches) cho cả train và validation.
 

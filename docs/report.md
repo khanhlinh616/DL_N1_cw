@@ -1,7 +1,7 @@
 # BÁO CÁO DỰ ÁN (PROJECT REPORT)
 
 * **Dự án:** One-Stage Object Detector (YOLO-style Head trên COCO 2017)
-* **Cập nhật lần cuối:** 2026-11-15
+* **Cập nhật lần cuối:** 2026-11-26
 
 > [!NOTE]
 > Tuân thủ RULES.md §17.4: Mọi số liệu thực nghiệm chỉ được điền từ
@@ -115,15 +115,15 @@ Ground Truth: 7 objects (person×4, bicycle×2, motorcycle×1)
 
 ### 3.2 Kết Quả Baseline (M6 — Thực Hiện Trên 14k Dữ Liệu Thật)
 
-| Chỉ số | Epoch 1 | Epoch 2 | Xu hướng |
-|:---|:---|:---|:---|
-| Ảnh huấn luyện đã xử lý | 14.000 / 14.000 | 14.000 / 14.000 (Lũy kế 28k) | Hoàn tất 100% Epoch 1 & 2 |
-| Train Loss Total | 4.7706 | **4.1866** | Giảm 12.2% |
-| - Train Loss Box (CIoU) | 0.4253 | **0.3970** | Cải thiện độ khớp box |
-| - Train Loss Obj (Focal) | 0.3700 | **0.3535** | Giảm dương tính giả nền |
-| - Train Loss Cls (BCE) | 2.2741 | **1.8480** | Phân loại 80 lớp hội tụ tốt |
-| Val Loss Total (1k held-out) | 4.7282 | **4.4330** | Giảm 6.2% trên held-out |
-| Checkpoint lưu trữ | `epoch_1.pth` | `epoch_2.pth`, `best_map.pth` | Đã lưu và xác thực bit-exact |
+| Chỉ số | Epoch 1 | Epoch 2 | Epoch 3 | Xu hướng |
+|:---|:---|:---|:---|:---|
+| Ảnh đã xử lý | 14.000 | 14.000 | 14.000 (Lũy kế 42k) | Hoàn tất 100% Ep 1–3 |
+| Train Loss Total | 4.7706 | **4.1866** | 4.3168 | Giảm so với Ep 1 (−9.5%) |
+| - Box (CIoU) | 0.4253 | **0.3970** | 0.4081 | Ổn định quanh 0.40 |
+| - Obj (Focal) | 0.3700 | **0.3535** | 0.3593 | Giảm dương tính giả nền |
+| - Cls (BCE) | 2.2741 | **1.8480** | 1.9171 | Phân loại 80 lớp hội tụ |
+| Val Loss Total (1k) | 4.7282 | 4.4330 | **4.1814** | Giảm liên tục (−11.6%) |
+| Checkpoint | `epoch_1.pth` | `epoch_2.pth` | `epoch_3.pth`, `best_map.pth` | Ep 3 đạt best val loss |
 
 ### 3.3 Ablation Studies (M7 — Thực Hiện Trên 1k Val-Heldout)
 
