@@ -102,9 +102,9 @@ python -m pytest                 # Bao gồm 1 slow overfit test (~2 phút)
 | 1 | 4.7706 | 4.7282 | ✅ Hoàn thành |
 | 2 | 4.1866 | 4.4330 | ✅ Hoàn thành |
 | 3 | 4.3168 | **4.1814** | ✅ Hoàn thành (`best_map.pth`) |
-| 4 | 5.3979* | — | 🔄 Đang chạy tiếp từ Batch 1001 (dự kiến dừng 00h20) |
+| 4 | 5.2364* | — | ⏸ Dừng tại Batch 1550/3474 (44.6%, dừng lúc 00h20) |
 
-> \*avg loss Epoch 4 tính đến Batch 1000. Checkpoint: `outputs/checkpoints/epoch_4.pth`.
+> \*avg loss Epoch 4 tính đến Batch 1550. Checkpoint: `outputs/checkpoints/epoch_4.pth` (00:20, 27/11/2026).
 
 ### M7 — Ablation Study (100 ảnh held-out)
 
@@ -125,7 +125,7 @@ python -m pytest                 # Bao gồm 1 slow overfit test (~2 phút)
 
 - Huấn luyện trên tập con **14k ảnh**, chưa đủ để hội tụ mAP cao trên `val2017` (M8 chạy trước khi xong Epoch 2–3).
 - **CPU-only**: ~3–5 giờ/epoch (batch=4, num-threads=4); kích thước đầu vào cố định **512×512**.
-- **Epoch 3 đã hoàn thành** (42k ảnh lũy kế, `best_map.pth` đạt val loss **4.1814**); **Epoch 4** đã đạt 1000/3474 batch (28.8%), checkpoint `epoch_4.pth`, tạm dừng hạ nhiệt CPU.
+- **Epoch 3 đã hoàn thành** (42k ảnh lũy kế, `best_map.pth` đạt val loss **4.1814**); **Epoch 4** đã đạt 1550/3474 batch (44.6%), checkpoint `epoch_4.pth`, tạm dừng lúc 00h20 theo kế hoạch.
 
 ## Docs
 

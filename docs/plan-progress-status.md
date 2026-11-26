@@ -1,8 +1,8 @@
 # TIẾN ĐỘ THỰC HIỆN DỰ ÁN (PLAN & PROGRESS STATUS)
 
-* **Cập nhật lần cuối:** 2026-11-27 00:16
-* **Trạng thái tổng thể:** Hoàn thành M0–M9; Đã hoàn thành 100% Epoch 1, 2 & 3 baseline (đang chạy tiếp Epoch 4).
-* **Tiến độ trực tiếp:** Epoch 4: Batch 1500/3474 (43.2%) | Loss: 5.2407 (box: 0.4111, obj: 0.4013, cls: 2.7839)
+* **Cập nhật lần cuối:** 2026-11-27 00:20
+* **Trạng thái tổng thể:** Hoàn thành M0–M9; Đã hoàn thành 100% Epoch 1, 2 & 3 baseline (Epoch 4 tạm dừng tại 44.6%).
+* **Tiến độ trực tiếp:** Epoch 4: Batch 1550/3474 (44.6%) | Loss: 5.2364 (box: 0.4112, obj: 0.4008, cls: 2.7794) — checkpoint `epoch_4.pth`
 
 ---
 
@@ -16,7 +16,7 @@
 | **M3** | Assigner (3 ô) + MultiTaskLoss (CIoU, Focal, BCE) | Unit test loss, Overfit 10 ảnh: loss mượt về 0, recall ≈ 1.0 | **Hoàn thành** |
 | **M4** | Training engine (AdamW, Cosine LR, AMP, clip 10) | Chạy 1 epoch thử nghiệm, lưu checkpoint theo val-heldout | **Hoàn thành** |
 | **M5** | Decoder (offset [-0.5, 1.5], dải 16s), Batched NMS | Smoke test 100 ảnh held-out, xuất JSON hợp lệ, chạy COCOeval | **Hoàn thành** |
-| **M6** | Train baseline trên 14k ảnh train | Đã hoàn thành Epoch 1–3 (Ep3 Val: 4.1814, `best_map.pth`), đang chạy Epoch 4 | **Đang chạy Epoch 4** |
+| **M6** | Train baseline trên 14k ảnh train | Đã hoàn thành Epoch 1–3 (Ep3 Val: 4.1814, `best_map.pth`), Epoch 4 đạt 44.6% | **Tạm dừng Epoch 4 (44.6%)** |
 | **M7** | 3 bài Ablation studies (mỗi bài 5-10 epochs) | Bảng so sánh 3 ablation chỉ đo trên val-heldout 1k | **Hoàn thành** |
 | **M8** | Final evaluation trên val2017 (5k) + Visualizer | Chạy COCOeval đúng 1 lần trên val2017, xuất ≥15 ảnh (tốt & 3 ca lỗi) | **Hoàn thành** |
 | **M9** | Đóng gói, dọn dẹp, kiểm tra CLI và tài liệu | CLI train/eval/demo chạy độc lập mượt mà, PEP8 chuẩn, 55/55 unit tests pass | **Hoàn thành** |
