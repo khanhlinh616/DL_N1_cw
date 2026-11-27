@@ -79,7 +79,7 @@ python -m src.evaluate --dataset val2017 --final
 # Demo 1 ảnh, trực quan hóa 15 mẫu & chạy ablation
 python -m src.demo --image data/coco/val2017/000000000139.jpg --checkpoint outputs/checkpoints/best_map.pth
 python -m src.visualize --predictions outputs/evaluation_results/predictions_heldout.json --num-samples 15
-python -m src.ablation --variant all
+python -m src.ablation --checkpoint outputs/checkpoints/best_map.pth --max-images 100
 ```
 
 ## Testing

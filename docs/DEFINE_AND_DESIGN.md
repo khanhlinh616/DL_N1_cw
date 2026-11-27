@@ -122,8 +122,8 @@ train_one_epoch(model, optimizer, scaler, dataloader, device, epoch, loss_fn)  #
 evaluate_coco(model, dataloader, coco_gt, device, output_json_path)  # JSON COCO + COCOeval; draw_detections(image, boxes, labels, scores, class_names, color)
 ```
 #### 2.5.2 CLI
-* `python -m src.train --config configs/base_config.yaml --batch-size 16 --epochs 20 --lr 0.001 --resume None --seed 42` (đánh giá định kỳ trên `val_heldout1k.json`, lưu `best_map.pth`); `python -m src.evaluate --weights outputs/checkpoints/best_map.pth --data-config configs/dataset_coco_subset.yaml --conf-thresh 0.05 --nms-thresh 0.60` (COCOeval 1 lần trên `val2017`).
-* `python -m src.visualize --weights ... --num-images 20 --output-dir outputs/visualizations/ --conf-thresh 0.30` (GT vs Pred, ca tốt + 3 ca lỗi); `python -m src.demo --source <ảnh> --weights ... --save-path outputs/demo_result.jpg` (dự đoán 1 ảnh).
+* `python -m src.train --config configs/base_config.yaml --batch-size 16 --epochs 20 --lr 0.001 --seed 42` (đánh giá định kỳ trên `val_heldout1k.json`, lưu `best_map.pth`); `python -m src.evaluate --checkpoint outputs/checkpoints/best_map.pth --dataset val2017 --final --conf-thresh 0.05 --nms-thresh 0.60` (COCOeval 1 lần trên `val2017`).
+* `python -m src.visualize --predictions outputs/evaluation_results/predictions_heldout.json --num-samples 15 --output-dir outputs/visualizations/eval_samples --conf-thresh 0.10` (GT vs Pred, ca tốt + 3 ca lỗi); `python -m src.demo --image <ảnh> --checkpoint outputs/checkpoints/best_map.pth --output-dir outputs/visualizations/demo` (dự đoán 1 ảnh).
 ### 2.6 Milestones & Project Status
 | Mốc | Deliverables | Tiêu chí hoàn thành |
 | :--- | :--- | :--- |
