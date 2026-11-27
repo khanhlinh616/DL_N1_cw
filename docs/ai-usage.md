@@ -89,7 +89,7 @@
 
 ## MILESTONE M6: BASELINE MODEL TRAINING (14K SUBSET)
 - **Công cụ:** Antigravity AI Agent.
-- **Mục đích prompt:** Khởi động vòng lặp huấn luyện chính thức Baseline 20 epochs trên 14.000 ảnh COCO train subset (`train_subset14k.json`) và đánh giá định kỳ trên 1.000 ảnh val held-out (`val_heldout1k.json`).
+- **Mục đích prompt:** Khởi động vòng lặp huấn luyện Baseline trên 14.000 ảnh COCO train subset (`train_subset14k.json`, kế hoạch 5 epochs trên CPU) và đánh giá định kỳ trên 1.000 ảnh val held-out (`val_heldout1k.json`).
 - **Đóng góp của sinh viên:** Xác nhận chuyển giao milestone M6 sau khi kiểm chứng hoàn tất 100% dữ liệu 118k ảnh `train2017` và nghiệm thu M5.
 - **Thành phần AI sinh ra / điều phối:** Điều phối tiến trình huấn luyện nền, ghi nhận metric losses và lưu trữ checkpoints `best_map.pth`.
 - **Kiểm chứng:** Hoàn thành 100% Epoch 1 (Train 4.7706, Val 4.7282), Epoch 2 (Train 4.1866, Val 4.4330) và Epoch 3 (Train 4.3168, Val 4.1814 — lưu `best_map.pth`). Đang chạy tiếp Epoch 4 mở khóa backbone ResNet-50 (đạt 60.4%, batch 2100/3474, loss 5.1313). Checkpoint lưu trữ an toàn từng epoch và mỗi 50 batch (`outputs/checkpoints/epoch_{N}.pth`), hỗ trợ resume chính xác.

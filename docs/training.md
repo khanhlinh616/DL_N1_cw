@@ -39,7 +39,7 @@ $$\mathcal{L}_{\text{total}} = \lambda_{\text{box}} \mathcal{L}_{\text{CIoU}} + 
 |:---|:---|:---|
 | **Optimizer** | `AdamW` ($\text{lr} = 10^{-3}$, `weight_decay = 5e-4`, `betas=[0.9, 0.999]`) | Hội tụ ổn định hơn SGD ở bước đầu |
 | **LR Scheduler** | `CosineAnnealingLR` ($\text{lr}_{\min} = 10^{-5}$) + Warmup 2 epochs | `warmup_bias_lr = 1e-4` |
-| **Batch Size / Seed** | Mặc định 16 / `seed = 42` | Chạy CPU dùng `--batch-size 4 --num-threads 4` (3.474 batch/epoch) |
+| **Batch Size / Epochs** | Config mặc định 16 / 20 epochs | Kế hoạch CPU-only chạy **5 epochs** với `--batch-size 4 --num-threads 4` (3.474 batch/epoch) |
 | **Gradient Clipping** | `max_norm = 10.0` | Chống bùng nổ gradient khi mở khóa backbone |
 | **Mixed Precision** | `torch.amp.autocast` + `GradScaler` | Tự động fallback về FP32 an toàn trên CPU |
 | **Backbone Freeze** | Đóng băng 3 epoch đầu; mở khóa `layer2–4` từ Epoch 4 | `FrozenBatchNorm2d` luôn bất biến |
@@ -68,8 +68,8 @@ $$\mathcal{L}_{\text{total}} = \lambda_{\text{box}} \mathcal{L}_{\text{CIoU}} + 
 ```bash
 set PYTHONPATH=.
 
-# Resume Epoch 4 (từ batch 2100/3474) với giới hạn 4 luồng CPU
-python -u -m src.train --epochs 4 --batch-size 4 --resume outputs/checkpoints/epoch_4.pth --num-threads 4 --git-sync
+# Resume từ Epoch 4 và chạy tiếp đến hết Epoch 5 (giới hạn 4 luồng CPU)
+python -u -m src.train --epochs 5 --batch-size 4 --resume outputs/checkpoints/epoch_4.pth --num-threads 4 --git-sync
 
 # Smoke test nhanh pipeline
 python -m src.train --epochs 1 --batch-size 2 --max-images 8

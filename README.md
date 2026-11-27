@@ -67,10 +67,10 @@ set PYTHONPATH=.   # Bắt buộc trên Windows PowerShell/CMD trước khi ch�
 ```bash
 set PYTHONPATH=.
 
-# Huấn luyện: smoke test / baseline / resume Epoch 4 với giới hạn 4 luồng CPU
+# Huấn luyện: smoke test / baseline 5 epochs / resume Epoch 4 với giới hạn 4 luồng CPU
 python -m src.train --epochs 1 --batch-size 2 --max-images 8
-python -m src.train --epochs 20 --batch-size 16
-python -u -m src.train --epochs 4 --batch-size 4 --resume outputs/checkpoints/epoch_4.pth --num-threads 4 --git-sync
+python -m src.train --epochs 5 --batch-size 4 --num-threads 4 --git-sync
+python -u -m src.train --epochs 5 --batch-size 4 --resume outputs/checkpoints/epoch_4.pth --num-threads 4 --git-sync
 
 # Đánh giá nội bộ (held-out 1k) & đánh giá chính thức (val2017 — đã khóa sau M8)
 python -m src.evaluate --dataset heldout --batch-size 8

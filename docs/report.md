@@ -113,7 +113,7 @@ Ví dụ minh họa (src/demo.py):
 
 ### 4.1 Hạn Chế Hiện Tại
 1. **Quy mô tập train nhỏ:** 14.000 ảnh (~12% COCO `train2017`) khiến các lớp hiếm (<50 mẫu) khó hội tụ.
-2. **Phần cứng CPU-only:** Mỗi epoch mất nhiều giờ và phải chia phiên chạy để tránh quá nhiệt CPU; chưa chạy đủ 20 epochs để `mAP` tăng cao trên `val2017`.
+2. **Phần cứng CPU-only:** Mỗi epoch mất ~3–5 giờ và phải chia phiên chạy để tránh quá nhiệt CPU; kế hoạch thực tế giới hạn ở **5 epochs** thay vì 20 epochs để phù hợp tài nguyên phần cứng.
 3. **Độ phân giải cố định $512 \times 512$:** Vật thể rất nhỏ ($<32^2$ px) dễ mất chi tiết đặc trưng ở tầng $P_3$.
 4. **Static Assigner:** Quy tắc 3 ô cố định chưa linh hoạt theo độ tự tin dự đoán như SimOTA / TAL.
 

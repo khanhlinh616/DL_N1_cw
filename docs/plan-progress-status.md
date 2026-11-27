@@ -16,7 +16,7 @@
 | **M3** | Assigner 3 ô + MultiTaskLoss (CIoU/Focal/BCE) | Overfit 10 ảnh: loss giảm ≥ 95% (98.21%), recall = 1.0 | **Hoàn thành** |
 | **M4** | Training Engine (AdamW, Cosine LR, AMP, Clip 10) | Smoke run 1 epoch, lưu/resume checkpoint bit-exact | **Hoàn thành** |
 | **M5** | Decoder (offset [−0.5,1.5], dim [0,16s]) + NMS | Pilot 100 ảnh held-out, JSON hợp lệ, COCOeval chạy mượt | **Hoàn thành** |
-| **M6** | Train baseline trên 14k ảnh (`train_subset14k`) | Epoch 1–3 xong (`best_map.pth` Val 4.1814); Epoch 4 đạt 60.4% | **Tạm dừng Ep4** |
+| **M6** | Train baseline 5 epochs trên 14k ảnh (`train_subset14k`) | Epoch 1–3 xong (`best_map.pth` Val 4.1814); Epoch 4 đạt 60.4% (còn Ep4 + Ep5) | **Tạm dừng Ep4** |
 | **M7** | 3 bài Ablation Studies trên `val-heldout 1k` | So sánh CIoU vs SmoothL1, Focal vs BCE, FPN vs P5 | **Hoàn thành** |
 | **M8** | Đánh giá 1 lần `val2017` + Visualizer 15 mẫu | Khóa `final_eval.lock`, xuất 15 ảnh phân loại ca lỗi | **Hoàn thành** |
 | **M9** | Đóng gói CLI (`train/evaluate/demo`), PEP8, docs | 55/55 unit tests passed, tài liệu ≤ 200 dòng | **Hoàn thành** |
@@ -33,13 +33,13 @@
 | **3** | ✅ 100% | 4.3168 | 0.4081 | 0.3593 | 1.9171 | **4.1814** | Best Val Loss (`best_map.pth`) |
 | **4** | ⏸ 60.4% | 5.1313* | 0.4088* | 0.3964* | 2.6909* | — | Mở khóa ResNet-50 (Batch 2100/3474) |
 
-### 2.2 Chi tiết phiên chạy Epoch 4 & Kế hoạch hoàn tất
-- **Đã hoàn thành:** 2.100 / 3.474 batches (8.400 / 13.896 ảnh mẫu, batch size = 4, `--num-threads 4`).
-- **Còn lại:** 1.374 batches (~39.6% epoch) + 250 batches validation trên `val_heldout1k` (ước tính ~1.5–2 giờ trên CPU).
-- **Lệnh khôi phục (resume):**
+### 2.2 Chi tiết phiên chạy Epoch 4 & Kế hoạch hoàn tất (Mục tiêu 5 Epochs)
+- **Đã hoàn thành:** Epoch 1–3 (100%) + Epoch 4 đạt 2.100 / 3.474 batches (60.4%, `--batch-size 4 --num-threads 4`).
+- **Còn lại:** 1.374 batches cuối Epoch 4 + 1 epoch đầy đủ cho Epoch 5 (ước tính ~5–6.5 giờ CPU).
+- **Lệnh khôi phục (resume chạy tiếp đến hết Epoch 5):**
   ```bash
   set PYTHONPATH=.
-  python -u -m src.train --epochs 4 --batch-size 4 --resume outputs/checkpoints/epoch_4.pth --num-threads 4 --git-sync
+  python -u -m src.train --epochs 5 --batch-size 4 --resume outputs/checkpoints/epoch_4.pth --num-threads 4 --git-sync
   ```
 
 ---
