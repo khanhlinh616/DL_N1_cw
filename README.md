@@ -37,29 +37,29 @@ Input [B, 3, 512, 512] (Letterbox)
 ## Project Structure
 
 ```text
-d:\cw\
-├── configs/          # YAML config (base_config, dataset_coco_subset, model_resnet50_fpn)
+DL_N1_cw/
+├── configs/          # YAML configs (base, dataset, model)
 ├── data/coco/        # Dữ liệu COCO 2017 (không commit — xem .gitignore)
 ├── docs/             # Tài liệu kỹ thuật, báo cáo, nhật ký & tiến độ
-├── outputs/          # Checkpoints, logs, evaluation_results, visualizations (không commit)
+├── outputs/          # Checkpoints, logs, eval & viz (không commit)
 ├── src/
 │   ├── core/         # assigner.py, decoder.py, loss.py
 │   ├── data/         # category_mapper.py, dataset.py, download_data.py, transforms.py
 │   ├── models/       # backbone_fpn.py, yolo_head.py, detector.py
 │   ├── utils/        # box_ops.py, config.py, logger.py
 │   └── {train,evaluate,demo,visualize,ablation}.py
-├── tests/            # 14 tệp test: 55 unit tests + 1 slow overfit test
+├── tests/            # 14 tệp test_*.py + verify_split.py (55 unit + 1 slow)
 ├── requirements.txt
 └── RULES.md
 ```
 
 ## Requirements & Installation
 
-- **Môi trường:** Python 3.10+, PyTorch CPU/CUDA, tối thiểu ~19 GB ổ đĩa cho COCO 2017 (`val2017` + `annotations` + `train2017`).
+- **Môi trường:** Python 3.10+, PyTorch 2.0+ (CPU/CUDA), tối thiểu ~19 GB ổ đĩa cho COCO 2017 (`val2017` + `annotations` + `train2017`).
 
-```bash
+```powershell
 pip install -r requirements.txt
-set PYTHONPATH=.   # Bắt buộc trên Windows PowerShell/CMD trước khi chạy python -m src.*
+$env:PYTHONPATH="."   # PowerShell (Windows) | CMD: set PYTHONPATH=.
 ```
 
 ## Usage
