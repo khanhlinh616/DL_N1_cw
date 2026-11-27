@@ -85,20 +85,17 @@ $$w = (2\sigma(t_w))^2 \cdot 4s, \quad w \in [0,\, 16s]$$
 
 $$\text{score} = \sigma(t_{\text{obj}}) \times \sigma(t_{\text{cls,argmax}})$$
 
-### 2.4 Minh Họa Đầu Ra (Chờ M8 — Mô Hình Chưa Huấn Luyện Đủ)
+### 2.4 Minh Họa Định Dạng Đầu Ra
 
 ```
-Ảnh: data/coco/val2017/000000000139.jpg
-Kích thước gốc: 640×480
-
-Dự đoán (sau M8, ví dụ minh họa định dạng):
+Ảnh: data/coco/val2017/000000000139.jpg (640×480)
+Dự đoán mẫu:
   Box 1: [52.3, 134.1, 480.2, 420.6]  score=0.84  label="person"
   Box 2: [10.1,  22.7, 110.5, 185.3]  score=0.61  label="bicycle"
-
 Ground Truth: 7 objects (person×4, bicycle×2, motorcycle×1)
 ```
 
-> *Số liệu thực tế và ảnh trực quan hóa sẽ được cập nhật tại M8.*
+> Đã xuất 15 ca mẫu trực quan hóa (chuẩn, lỗi nhỏ, che khuất) tại `outputs/visualizations/eval_samples/`.
 
 ---
 
@@ -115,15 +112,17 @@ Ground Truth: 7 objects (person×4, bicycle×2, motorcycle×1)
 
 ### 3.2 Kết Quả Baseline (M6 — Thực Hiện Trên 14k Dữ Liệu Thật)
 
-| Chỉ số | Epoch 1 | Epoch 2 | Epoch 3 | Xu hướng |
-|:---|:---|:---|:---|:---|
-| Ảnh đã xử lý | 14.000 | 14.000 | 14.000 (Lũy kế 42k) | Hoàn tất 100% Ep 1–3 |
-| Train Loss Total | 4.7706 | **4.1866** | 4.3168 | Giảm so với Ep 1 (−9.5%) |
-| - Box (CIoU) | 0.4253 | **0.3970** | 0.4081 | Ổn định quanh 0.40 |
-| - Obj (Focal) | 0.3700 | **0.3535** | 0.3593 | Giảm dương tính giả nền |
-| - Cls (BCE) | 2.2741 | **1.8480** | 1.9171 | Phân loại 80 lớp hội tụ |
-| Val Loss Total (1k) | 4.7282 | 4.4330 | **4.1814** | Giảm liên tục (−11.6%) |
-| Checkpoint | `epoch_1.pth` | `epoch_2.pth` | `epoch_3.pth`, `best_map.pth` | Ep 3 đạt best val loss |
+| Chỉ số | Epoch 1 | Epoch 2 | Epoch 3 | Epoch 4 (đang chạy) |
+|:---|:---:|:---:|:---:|:---:|
+| Trạng thái | Hoàn tất | Hoàn tất | Hoàn tất | ⏸ Tạm dừng Batch 2100/3474 (60.4%) |
+| Train Loss Total | 4.7706 | **4.1866** | 4.3168 | 5.1313* (mở khóa backbone) |
+| - Box (CIoU) | 0.4253 | **0.3970** | 0.4081 | 0.4088 |
+| - Obj (Focal) | 0.3700 | **0.3535** | 0.3593 | 0.3964 |
+| - Cls (BCE) | 2.2741 | **1.8480** | 1.9171 | 2.6909 |
+| Val Loss Total (1k) | 4.7282 | 4.4330 | **4.1814** | — |
+| Checkpoint | `epoch_1.pth` | `epoch_2.pth` | `epoch_3.pth`, `best_map.pth` | `epoch_4.pth` |
+
+> \*Epoch 4 mở khóa toàn bộ ResNet-50 (layers 2–4); loss đang giảm từ 6.1682 về 5.1313.
 
 ### 3.3 Ablation Studies (M7 — Thực Hiện Trên 1k Val-Heldout)
 

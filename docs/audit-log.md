@@ -37,3 +37,7 @@
 - **2026-11-16 (Merge & Sync):** Hợp nhất (merge) lịch sử gốc (commit 952fd34 từ DL Team 1) và gắn lại chính xác toàn bộ thẻ tags M0–M6 theo từng commit nguyên bản (`8a60937`, `ee9d166`, `86d3c17`, `952fd34`, `70f6d9c`, `18cc511`, `93d9134`). Đồng bộ duy nhất 1 nhánh `main` lên GitHub `khanhlinh616/DL_N1_cw`.
 - **2026-11-18 (M7):** Thực hiện 3 bài thực nghiệm bóc tách thành phần (Ablation Studies) trên tập `val-heldout 1k`: Smooth L1 vs CIoU, BCE vs Focal Loss, Single-scale P5 vs FPN {P3,P4,P5}.
 - **2026-11-18 (M8):** Chạy đánh giá chính thức duy nhất trên tập `val2017` với cờ `--final`, xuất 20.000 dự đoán, tạo file khóa `outputs/final_eval.lock` và ghi nhận kiểm toán.
+- **2026-11-21:** Hoàn tất 100% Epoch 1 baseline (Train 4.7706, Val 4.7282), lưu checkpoint `epoch_1.pth`.
+- **2026-11-24:** Hoàn tất 100% Epoch 2 baseline (Train 4.1866, Val 4.4330), lưu checkpoint `epoch_2.pth`.
+- **2026-11-26:** Hoàn tất 100% Epoch 3 baseline (Train 4.3168, Val 4.1814 — best val loss), lưu `epoch_3.pth`, `best_map.pth`.
+- **2026-11-27:** Chạy Epoch 4 (mở khóa backbone ResNet-50); đạt 2.100/3.474 batches (60.4%), loss 5.1313, checkpoint `epoch_4.pth`.

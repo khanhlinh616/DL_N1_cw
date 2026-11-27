@@ -99,17 +99,8 @@ cw_nhom1/
 └── README.md, requirements.txt, RULES.md, .gitignore
 ```
 ### 2.4 Data Flow
-#### 2.4.1 Huấn luyện
-```text
-Ảnh+JSON -> Letterbox 512 (xywh->xyxy, lưu r/pad/image_id) -> Category Mapping -> ResNet-50+FPN (FrozenBN) -> P3/P4/P5 -> Shared Head -> logits
-GT -> Assigner (chọn tầng theo kích thước; ô tâm + 2 lân cận) -> targets + pos_mask
-logits + targets -> MultiTaskLoss (5*CIoU + Focal_obj + BCE_cls) -> Backprop -> AdamW -> đánh giá định kỳ val-heldout 1k
-```
-#### 2.4.2 Suy luận và đánh giá
-```text
-Ảnh test -> Letterbox 512 (r, pad_w, pad_h, image_id, orig_size) -> Forward -> logits -> Decoder (c=(grid+2σ(t)-0.5)s; wh=(2σ(t))²·4s)
--> score=σ(obj)σ(cls)>0.05 -> Batched NMS theo lớp (IoU 0.60, top 100) -> bỏ pad, chia r -> class_idx->category_id -> predictions.json -> COCOeval | Visualizer
-```
+* **Huấn luyện:** Ảnh + JSON → Letterbox 512 → Category Mapping → ResNet-50 + FPN (FrozenBN) → Shared Head → logits. GT boxes → Assigner (3 ô dương) → targets. MultiTaskLoss (5×CIoU + 1×Focal_obj + 1×BCE_cls) → AdamW + Cosine LR.
+* **Suy luận & Đánh giá:** Ảnh test → Letterbox 512 → Forward → Decoder (tâm $[-0.5,1.5]s$, kích thước $[0,16s]$) → lọc score $>0.05$ → Batched NMS (IoU 0.60, top 100) → bỏ pad, chia $r$ về ảnh gốc → Category ID → `COCOeval` / Visualizer.
 #### 2.4.3 Quy tắc chuyển hệ tọa độ
 1. **COCO → Letterbox:** $x_1=x_{min}$, $x_2=x_{min}+w$ (tương tự $y$); $r=\min(512/H,512/W)$; $\text{pad}_w=(512-W r)/2$, $\text{pad}_h=(512-H r)/2$; $x'=x\cdot r+\text{pad}_w$, $y'=y\cdot r+\text{pad}_h$.
 2. **Letterbox → lưới FPN (Assigner), tầng $l$ stride $s_l$:** tâm $c=(x_1'+x_2')/2$ (tương tự $y$); $g=c/s_l$; ô chứa tâm $(i,j)=(\lfloor g_x\rfloor,\lfloor g_y\rfloor)$; phần dư $\delta_x=g_x-i$, $\delta_y=g_y-j\in[0,1)$.

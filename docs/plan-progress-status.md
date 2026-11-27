@@ -29,7 +29,7 @@
 - [x] Tạo `.gitignore` chặn triệt để `/data/`, `/outputs/`, checkpoint, secrets.
 - [x] Tạo `requirements.txt` và các file `configs/`.
 - [x] Tách 14k train / 1k held-out từ COCO 2017 với seed 42 cố định, assert overlap = 0.
-- [x] Đã tải và giải nén toàn bộ 5.000 ảnh `val2017`. File `train2017.zip` đang tải nền.
+- [x] Đã tải và giải nén 100% dữ liệu train2017 (118.287 ảnh) và val2017 (5.000 ảnh).
 
 ### Milestone M1: Dataset & Metadata Pipeline
 - [x] `src/data/category_mapper.py`: Ánh xạ 2 chiều 80 lớp chuẩn COCO, loại trừ 10 ID khuyết.
@@ -87,7 +87,7 @@
 - [x] Toàn bộ test suite dự án: **49 tests** (48 unit tests + 1 slow overfit test) PASSED 100%.
 
 ### Milestone M6: Baseline Training & Epoch Checkpointing
-- [x] Huấn luyện thực tế trên 14k ảnh: hoàn tất trọn vẹn Epoch 1, 2 & 3 (Ep1 Train 4.7706 / Val 4.7282; Ep2 Train 4.1866 / Val 4.4330; Ep3 Train 4.3168 / Val 4.1814). Đang chạy tiếp Epoch 4 (mở khóa backbone).
+- [x] Huấn luyện thực tế trên 14k ảnh: hoàn tất Epoch 1–3 (Ep3 đạt best val loss 4.1814); Epoch 4 (mở khóa backbone) đạt 2.100/3.474 batches (60.4%), loss 5.1313, checkpoint `epoch_4.pth`.
 - [x] Nâng cấp cơ chế lưu checkpoint: tự động lưu `epoch_{N}.pth` sau mỗi epoch và mỗi 50 batch, bên cạnh `best_map.pth` và `last_epoch.pth`.
 - [x] Nâng cấp logging: in tiến độ chi tiết từng batch có `flush=True` (mỗi 20 batches) cho cả train và validation.
 

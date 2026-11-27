@@ -92,7 +92,7 @@
 - **Mục đích prompt:** Khởi động vòng lặp huấn luyện chính thức Baseline 20 epochs trên 14.000 ảnh COCO train subset (`train_subset14k.json`) và đánh giá định kỳ trên 1.000 ảnh val held-out (`val_heldout1k.json`).
 - **Đóng góp của sinh viên:** Xác nhận chuyển giao milestone M6 sau khi kiểm chứng hoàn tất 100% dữ liệu 118k ảnh `train2017` và nghiệm thu M5.
 - **Thành phần AI sinh ra / điều phối:** Điều phối tiến trình huấn luyện nền, ghi nhận metric losses và lưu trữ checkpoints `best_map.pth`.
-- **Kiểm chứng:** Xác thực toàn vẹn 14.000 ảnh huấn luyện và 1.000 ảnh held-out; tiến trình chạy ổn định đạt ~13.300 ảnh (~75 phút) trước khi dừng an toàn theo chỉ định người dùng nhằm bảo vệ phần cứng CPU khỏi quá nhiệt. Toàn bộ code và checkpoint kiểm chứng đều sẵn sàng.
+- **Kiểm chứng:** Hoàn thành 100% Epoch 1 (Train 4.7706, Val 4.7282), Epoch 2 (Train 4.1866, Val 4.4330) và Epoch 3 (Train 4.3168, Val 4.1814 — lưu `best_map.pth`). Đang chạy tiếp Epoch 4 mở khóa backbone ResNet-50 (đạt 60.4%, batch 2100/3474, loss 5.1313). Checkpoint lưu trữ an toàn từng epoch và mỗi 50 batch (`outputs/checkpoints/epoch_{N}.pth`), hỗ trợ resume chính xác.
 - **Hợp nhất lịch sử:** Hợp nhất nhánh lịch sử ban đầu (commit `952fd34` từ DL Team 1) với toàn bộ tiến trình M0–M6, gắn lại tags M0–M6 theo đúng commit hash ban đầu và đồng bộ duy nhất nhánh `main`.
 
 ---

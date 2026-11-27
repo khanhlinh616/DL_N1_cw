@@ -45,9 +45,11 @@ Nhận đầu vào là tensor logits thô từ Detection Head tại 3 tầng FPN
 
 ### Lệnh thực thi:
 ```bash
-# Đánh giá trên tập validation held-out 1k
-python src/evaluate.py --checkpoint outputs/checkpoints/best_map.pth --dataset heldout
+set PYTHONPATH=.
 
-# Đánh giá chính thức 1 lần trên val2017 (M8)
-python src/evaluate.py --checkpoint outputs/checkpoints/best_map.pth --dataset val2017 --final
+# Đánh giá trên tập validation held-out 1k
+python -m src.evaluate --checkpoint outputs/checkpoints/best_map.pth --dataset heldout
+
+# Đánh giá chính thức 1 lần trên val2017 (M8 — đã thực hiện và khóa an toàn)
+python -m src.evaluate --checkpoint outputs/checkpoints/best_map.pth --dataset val2017 --final
 ```

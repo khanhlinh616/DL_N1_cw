@@ -43,16 +43,20 @@ với trọng số mặc định: $\lambda_{\text{box}} = 5.0, \lambda_{\text{ob
 - **Learning Rate Scheduler:** Cosine Annealing giảm dần về $\text{lr}_{\text{min}} = 10^{-5}$ trong suốt chu kỳ 20 epochs.
 - **Mixed Precision:** Kích hoạt `torch.cuda.amp.autocast()` và `GradScaler` để tiết kiệm $40\%$ VRAM và tăng tốc $2\times$ trên GPU có Tensor Cores.
 - **Gradient Clipping:** Cắt ngưỡng gradient `clip_grad_norm_(parameters, max_norm=10.0)` chống tràn số và chống bùng nổ gradient.
-- **Quản lý Checkpoint:**
-  - Kiểm tra thẩm định định kỳ trên tập `val-heldout 1k` sau mỗi epoch.
-  - Lưu checkpoint tốt nhất tại `outputs/checkpoints/best_map.pth`.
-  - Lưu checkpoint gần nhất `outputs/checkpoints/last_epoch.pth` hỗ trợ `--resume`.
+- **Quản lý Checkpoint & Resume:**
+  - Đánh giá trên tập `val-heldout 1k` sau mỗi epoch; lưu `best_map.pth`.
+  - Tự động lưu checkpoint mỗi 50 batch và cuối mỗi epoch (`outputs/checkpoints/epoch_{N}.pth`).
+  - Hỗ trợ resume chính xác từng batch qua cờ `--resume`.
+  - Hỗ trợ tự động commit & push lên GitHub sau mỗi epoch qua `--git-sync`.
+- **Tối ưu CPU & Nhiệt độ:** Cờ `--num-threads 4` khống chế số luồng tính toán, chống nghẽn CPU và giảm phát nhiệt.
 
 ### Lệnh thực thi:
 ```bash
-# Huấn luyện đầy đủ 20 epochs
-python src/train.py --config configs/base_config.yaml --epochs 20
+set PYTHONPATH=.
+
+# Huấn luyện baseline (hoặc resume với git-sync)
+python -m src.train --epochs 4 --batch-size 4 --resume outputs/checkpoints/epoch_4.pth --num-threads 4 --git-sync
 
 # Kiểm thử nhanh pipeline (Smoke run)
-python src/train.py --config configs/base_config.yaml --max-images 8 --epochs 1
+python -m src.train --epochs 1 --batch-size 2 --max-images 8
 ```

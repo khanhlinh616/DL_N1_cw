@@ -15,12 +15,10 @@ Công cụ dòng lệnh cho phép người dùng chạy thử mô hình trên m�
 
 ### Lệnh thực thi:
 ```bash
+set PYTHONPATH=.
+
 # Chạy demo trên 1 ảnh với ngưỡng tin cậy 0.30
-python src/demo.py \
-    --image data/coco/val2017/000000000139.jpg \
-    --checkpoint outputs/checkpoints/best_map.pth \
-    --conf-thresh 0.30 \
-    --output-dir outputs/visualizations/demo
+python -m src.demo --image data/coco/val2017/000000000139.jpg --checkpoint outputs/checkpoints/best_map.pth --conf-thresh 0.30
 ```
 
 ---
@@ -42,11 +40,8 @@ Phục vụ việc nghiệm thu Milestone M8 theo yêu cầu của đề tài:
 
 ### Lệnh thực thi:
 ```bash
+set PYTHONPATH=.
+
 # Xuất 15 ảnh mẫu phân tích kết quả sau bài đánh giá M8
-python src/visualize.py \
-    --predictions outputs/evaluation_results/predictions_val2017.json \
-    --annotations data/coco/annotations/instances_val2017.json \
-    --image-dir data/coco/val2017 \
-    --output-dir outputs/visualizations/eval_samples \
-    --num-samples 15
+python -m src.visualize --dataset val2017 --n 15
 ```
