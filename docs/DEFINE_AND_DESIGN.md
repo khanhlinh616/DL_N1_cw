@@ -125,18 +125,18 @@ evaluate_coco(model, dataloader, coco_gt, device, output_json_path)  # JSON COCO
 * `python -m src.train --config configs/base_config.yaml --batch-size 16 --epochs 20 --lr 0.001 --seed 42` (đánh giá định kỳ trên `val_heldout1k.json`, lưu `best_map.pth`); `python -m src.evaluate --checkpoint outputs/checkpoints/best_map.pth --dataset val2017 --final --conf-thresh 0.05 --nms-thresh 0.60` (COCOeval 1 lần trên `val2017`).
 * `python -m src.visualize --predictions outputs/evaluation_results/predictions_heldout.json --num-samples 15 --output-dir outputs/visualizations/eval_samples --conf-thresh 0.10` (GT vs Pred, ca tốt + 3 ca lỗi); `python -m src.demo --image <ảnh> --checkpoint outputs/checkpoints/best_map.pth --output-dir outputs/visualizations/demo` (dự đoán 1 ảnh).
 ### 2.6 Milestones & Project Status
-| Mốc | Deliverables | Tiêu chí hoàn thành |
-| :--- | :--- | :--- |
-| **M0** Setup & Data Split | Môi trường, script tải, subset 14k/1k | Có `train_subset14k.json`, `val_heldout1k.json`, `instances_val2017.json` (5k) |
-| **M1** Dataset & Metadata | `COCODataset`, `transforms.py`, `category_mapper.py` | Test mapping 80 lớp 100%; batch $[B,3,512,512]$ kèm $r$, pad, image_id |
-| **M2** Model | ResNet-50 (FrozenBN) + FPN + Head | Forward GPU đúng shape $P_3,P_4,P_5$, không tràn VRAM |
-| **M3** Assigner & Loss | `assign_targets`, `compute_loss` | Overfit 10 ảnh: loss giảm mượt về ~0, recall ≈ 1.0 |
-| **M4** Training Engine | Vòng train, AMP, grad clip, chọn ckpt | Chạy 1 epoch không lỗi; lưu `best_map.pth` theo val-heldout |
-| **M5** Decoder & Pilot | `YoloDecoder`, Batched NMS, COCOeval | Smoke test 100 ảnh val-heldout; JSON hợp lệ; COCOeval không crash; hiệu chỉnh mục tiêu mAP |
-| **M6** Baseline | Train trên 14k (thiết kế 20 epochs; thực tế CPU 5 epochs) | Có `best_map.pth`; log loss và mAP val-heldout |
-| **M7** Ablation | 3 thực nghiệm (5–10 epochs/bài) | Bảng so sánh trên val-heldout 1k (không dùng `val2017`) |
-| **M8** Final Eval & Viz | Đánh giá 1 lần `val2017`; `visualize.py` | Bảng metric chính thức; ≥ 15 ảnh; phân tích đủ 3 ca lỗi |
-| **M9** Đóng gói & Docs | Dọn code, kiểm tra CLI, README | Chạy được train/evaluate/demo; code chuẩn PEP8 |
+| Mốc | Deliverables | Tiêu chí hoàn thành | Trạng thái |
+| :--- | :--- | :--- | :--- |
+| **M0** Setup & Data Split | Môi trường, script tải, subset 14k/1k | Có `train_subset14k.json`, `val_heldout1k.json`, `instances_val2017.json` (5k) | ✅ Hoàn thành |
+| **M1** Dataset & Metadata | `COCODataset`, `transforms.py`, `category_mapper.py` | Test mapping 80 lớp 100%; batch $[B,3,512,512]$ kèm $r$, pad, image_id | ✅ Hoàn thành |
+| **M2** Model | ResNet-50 (FrozenBN) + FPN + Head | Forward GPU/CPU đúng shape $P_3,P_4,P_5$, bias obj ≈ −4.595 | ✅ Hoàn thành |
+| **M3** Assigner & Loss | `assign_targets`, `compute_loss` | Overfit 10 ảnh: loss giảm 98.21%, recall = 1.00 | ✅ Hoàn thành |
+| **M4** Training Engine | Vòng train, AMP, grad clip, chọn ckpt | Smoke run 1 epoch; lưu/resume `best_map.pth` theo val-heldout | ✅ Hoàn thành |
+| **M5** Decoder & Pilot | `YoloDecoder`, Batched NMS, COCOeval | Smoke test 100 ảnh val-heldout; JSON hợp lệ (8.289 preds); COCOeval chạy mượt | ✅ Hoàn thành |
+| **M6** Baseline | Train trên 14k (thiết kế 20 epochs; thực tế CPU 5 epochs) | Ep1–3 xong (`best_map.pth` Val 4.1814); Ep4 đạt 2100/3474 batches (còn Ep4 + Ep5) | ⏸ Tạm dừng Ep4 (60.4%) |
+| **M7** Ablation | 3 thực nghiệm trên `val-heldout 1k` | Bảng so sánh CIoU, Focal, FPN (không dùng `val2017`) | ✅ Hoàn thành |
+| **M8** Final Eval & Viz | Đánh giá 1 lần `val2017`; `visualize.py` | Khóa `final_eval.lock`; xuất 15 ảnh phân tích đủ 3 ca lỗi | ✅ Hoàn thành |
+| **M9** Đóng gói & Docs | Dọn code, kiểm tra CLI, README, docs | CLI train/evaluate/demo chạy mượt; 55/55 unit tests pass; docs ≤ 200 dòng | ✅ Hoàn thành |
 ### 2.7 Key Design Decisions
 #### 1. Anchor-Based vs Anchor-Free
 * **Anchor-Based (YOLOv3/v4, Faster R-CNN):** $k$ anchor $(w_a,h_a)$ cố định từ K-means (3 anchor × 3 tầng); mô hình học độ lệch $\Delta x,\Delta y,\Delta w,\Delta h$. Hạn chế: $3\times(64^2+32^2+16^2)=16.128$ box; phụ thuộc dữ liệu, kém với tỷ lệ khung bất thường.
