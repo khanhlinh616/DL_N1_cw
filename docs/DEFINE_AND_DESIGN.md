@@ -133,7 +133,7 @@ evaluate_coco(model, dataloader, coco_gt, device, output_json_path)  # JSON COCO
 | **M3** Assigner & Loss | `assign_targets`, `compute_loss` | Overfit 10 ảnh: loss giảm mượt về ~0, recall ≈ 1.0 |
 | **M4** Training Engine | Vòng train, AMP, grad clip, chọn ckpt | Chạy 1 epoch không lỗi; lưu `best_map.pth` theo val-heldout |
 | **M5** Decoder & Pilot | `YoloDecoder`, Batched NMS, COCOeval | Smoke test 100 ảnh val-heldout; JSON hợp lệ; COCOeval không crash; hiệu chỉnh mục tiêu mAP |
-| **M6** Baseline | Train 20 epochs trên 14k | Có `best_map.pth`; log loss và mAP val-heldout |
+| **M6** Baseline | Train trên 14k (thiết kế 20 epochs; thực tế CPU 5 epochs) | Có `best_map.pth`; log loss và mAP val-heldout |
 | **M7** Ablation | 3 thực nghiệm (5–10 epochs/bài) | Bảng so sánh trên val-heldout 1k (không dùng `val2017`) |
 | **M8** Final Eval & Viz | Đánh giá 1 lần `val2017`; `visualize.py` | Bảng metric chính thức; ≥ 15 ảnh; phân tích đủ 3 ca lỗi |
 | **M9** Đóng gói & Docs | Dọn code, kiểm tra CLI, README | Chạy được train/evaluate/demo; code chuẩn PEP8 |

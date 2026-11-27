@@ -59,7 +59,7 @@ Tại ô lưới $(g_x, g_y)$ trên tầng stride $s_l \in \{8, 16, 32\}$:
 $$\hat{c}_x = (g_x + 2\sigma(t_x) - 0.5) \cdot s_l, \quad \hat{w} = (2\sigma(t_w))^2 \cdot 4s_l, \quad \text{score} = \sigma(t_{\text{obj}}) \times \sigma(t_{\text{cls,argmax}})$$
 
 ```text
-Ví dụ minh họa (src/demo.py):
+Ví dụ minh họa định dạng (không phải số đo thực nghiệm):
   Ảnh: data/coco/val2017/000000000139.jpg (640×480)
   Box 1: [52.3, 134.1, 480.2, 420.6]  score=0.84  label="person"
   Box 2: [10.1,  22.7, 110.5, 185.3]  score=0.61  label="bicycle"

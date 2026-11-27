@@ -30,7 +30,7 @@ set PYTHONPATH=.
 python -m src.demo --image data/coco/val2017/000000000139.jpg --checkpoint outputs/checkpoints/best_map.pth --conf-thresh 0.30
 ```
 
-**Ví dụ định dạng kết quả đầu ra:**
+**Ví dụ minh họa định dạng kết quả đầu ra:**
 ```text
 Ảnh: data/coco/val2017/000000000139.jpg (640x480)
   Box 1: [52.3, 134.1, 480.2, 420.6]  score=0.84  label="person"
