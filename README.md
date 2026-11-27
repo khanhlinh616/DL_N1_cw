@@ -102,9 +102,9 @@ python -m pytest                 # Bao gồm 1 slow overfit test (~2 phút)
 | 1 | 4.7706 | 4.7282 | ✅ Hoàn thành |
 | 2 | 4.1866 | 4.4330 | ✅ Hoàn thành |
 | 3 | 4.3168 | **4.1814** | ✅ Hoàn thành (`best_map.pth`) |
-| 4 | 5.2364* | — | 🔄 Đang chạy tiếp từ Batch 1551 (dự kiến dừng 15h00) |
+| 4 | 5.1428* | — | 🔄 Đang chạy tiếp từ Batch 2051 (dự kiến dừng 15h00) |
 
-> \*avg loss Epoch 4 tính đến Batch 1550. Checkpoint: `outputs/checkpoints/epoch_4.pth`.
+> \*avg loss Epoch 4 tính đến Batch 2050. Checkpoint: `outputs/checkpoints/epoch_4.pth`.
 
 ### M7 — Ablation Study (100 ảnh held-out)
 
@@ -125,7 +125,7 @@ python -m pytest                 # Bao gồm 1 slow overfit test (~2 phút)
 
 - Huấn luyện trên tập con **14k ảnh**, chưa đủ để hội tụ mAP cao trên `val2017` (M8 chạy trước khi xong Epoch 2–3).
 - **CPU-only**: ~3–5 giờ/epoch (batch=4, num-threads=4); kích thước đầu vào cố định **512×512**.
-- **Epoch 3 đã hoàn thành** (42k ảnh lũy kế, `best_map.pth` đạt val loss **4.1814**); **Epoch 4** đang tiếp tục chạy từ batch 1551/3474 (mở khóa backbone ResNet-50).
+- **Epoch 3 đã hoàn thành** (42k ảnh lũy kế, `best_map.pth` đạt val loss **4.1814**); **Epoch 4** đang tiếp tục chạy từ batch 2051/3474 (mở khóa backbone ResNet-50).
 
 ## Docs
 
