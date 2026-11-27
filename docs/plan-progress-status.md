@@ -1,8 +1,8 @@
 # TIẾN ĐỘ THỰC HIỆN DỰ ÁN (PLAN & PROGRESS STATUS)
 
-* **Cập nhật lần cuối:** 2026-11-27 23:42
+* **Cập nhật lần cuối:** 2026-11-28 00:16
 * **Trạng thái tổng thể:** Hoàn thành M0–M9; Đã hoàn thành 100% Epoch 1, 2 & 3 baseline (Epoch 4 tạm dừng tại 60.4%).
-* **Tiến độ trực tiếp:** Epoch 1: Batch 500/3474 (14.4%) | Loss: 9.7434 (box: 0.5157, obj: 0.5276, cls: 6.6373)
+* **Tiến độ trực tiếp:** Epoch 1: Batch 1000/3474 (28.8%) | Loss: 8.2241 (box: 0.4922, obj: 0.4698, cls: 5.2934)
 
 ---
 
@@ -51,5 +51,5 @@
 - **M3 (Assigner & Loss):** `assign_targets` phân tầng theo $\sqrt{wh}$ và gán 3 ô dương/vật thể; `MultiTaskLoss` ($5.0\mathcal{L}_{\text{CIoU}} + \mathcal{L}_{\text{Focal}} + \mathcal{L}_{\text{BCE}}$); Overfit 10 ảnh đạt loss giảm **98.21%** ($58.9644 \to 1.0534$), Recall **1.00** (10/10 boxes).
 - **M4 (Training Engine):** `AdamW` + `CosineAnnealingLR` (warmup 2 epochs) + Gradient Clipping `10.0` + lưu checkpoint mỗi 50 batches (`epoch_{N}.pth`) và cuối epoch (`best_map.pth`, `last_epoch.pth`) + `--git-sync`.
 - **M5 (Decoder & Eval):** `YoloDecoder` giải mã offset $[-0.5, 1.5]s_l$, kích thước $[0, 16s_l]$, Batched NMS (`IoU=0.60`, top-100); Pilot test 100 ảnh held-out sinh 8.289 predictions hợp lệ.
-- **M7 (Ablation trên 100 ảnh held-out):** So sánh trực tiếp chứng minh: CIoU tối ưu hình học 2D tốt hơn Smooth L1; Focal Loss tránh bùng nổ loss nền (BCE tăng 43.8% loss objectness); FPN $\{P_3, P_4, P_5\}$ tránh bỏ sót 84.3% vật nhỏ/vừa so với đơn tầng $P_5$.
+- **M7 (Ablation trên 100 ảnh held-out):** So sánh trực tiếp chứng minh: CIoU tối ưu hình học 2D tốt hơn Smooth L1; Focal Loss tránh bùng nổ loss nền (BCE tăng 43.8% loss total / +45.4% loss obj); FPN $\{P_3, P_4, P_5\}$ (5.376 ô) bao phủ vật nhỏ/vừa so với đơn tầng $P_5$ (chỉ 256 ô). Biểu đồ so sánh tại `outputs/visualizations/metrics/m7_ablation_comparison.png`.
 - **M8–M9 (Eval, Visualizer & CLI):** Đánh giá chính thức 1 lần trên `val2017` (200 ảnh, 20.000 predictions, 2.61 FPS CPU), khóa `outputs/final_eval.lock`; xuất 15 ảnh đối chiếu GT vs Pred tại `outputs/visualizations/eval_samples/`; kiểm thử `src.demo`, `src.visualize`, `src.evaluate`, `src.train`; **55/55 unit tests** (+1 slow test) pass 100%.
