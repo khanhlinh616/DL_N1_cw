@@ -94,20 +94,21 @@ python -m pytest                 # Bao gồm 1 slow overfit test 10 ảnh (~2 ph
 
 ### Trạng thái Checkpoint hiện tại (`outputs/checkpoints/`)
 - `best_map.pth` / `epoch_3.pth` / `last_epoch.pth`: Lưu tại **Epoch 3** (Val Loss tốt nhất: **4.1814**).
-- `epoch_4.pth`: Tạm dừng **Epoch 4** tại Batch **2100/3474** (60.4%, lúc 14:45 ngày 27/11/2026), sẵn sàng resume.
+- `epoch_4.pth`: Tạm dừng **Epoch 4** tại Batch **2100/3474** (60.4%, lúc 14:45 ngày 27/11/2026), còn 1.374 batches cuối Epoch 4 + Epoch 5 theo kế hoạch **5 epochs**.
 
 ### M3 — Overfit Test (10 ảnh, 40 bước, CPU)
 | Initial Loss | Final Loss | Mức giảm Loss | Recall @ IoU 0.9 |
 |:---:|:---:|:---:|:---:|
 | 58.9644 | 1.0534 | **98.21%** | **1.00** (10/10 boxes) |
 
-### M6 — Baseline Training (14k Train / 1k Val Held-out, CPU)
+### M6 — Baseline Training (Mục tiêu 5 Epochs, 14k Train / 1k Val Held-out, CPU)
 | Epoch | Backbone | Train Loss | Val Loss (1k) | Trạng thái |
 |:---:|:---|:---:|:---:|:---|
 | 1 | Frozen | 4.7706 | 4.7282 | ✅ Hoàn thành (`epoch_1.pth`) |
 | 2 | Frozen | 4.1866 | 4.4330 | ✅ Hoàn thành (`epoch_2.pth`) |
 | 3 | Frozen | 4.3168 | **4.1814** | ✅ Hoàn thành (`epoch_3.pth`, `best_map.pth`) |
 | 4 | Unfrozen (L2–4) | 5.1313* | — | ⏸ Tạm dừng Batch 2100/3474 (60.4%, `epoch_4.pth`) |
+| 5 | Unfrozen (L2–4) | — | — | ⏳ Kế hoạch chạy tiếp sau khi xong Epoch 4 |
 
 > \*Avg loss của Epoch 4 tính đến Batch 2100 (giảm từ 6.1682 sau khi mở khóa backbone).
 
@@ -117,8 +118,8 @@ python -m pytest                 # Bao gồm 1 slow overfit test 10 ảnh (~2 ph
 
 ## Limitations
 
-- Huấn luyện trên tập con **14k ảnh** (~12% COCO) nên chưa đủ để hội tụ `mAP` cao trên `val2017` (M8 đánh giá trước khi hoàn tất Epoch 3–4).
-- Chạy **CPU-only** (~3–5 giờ/epoch với `batch_size=4`), độ phân giải đầu vào cố định $512 \times 512$.
+- Huấn luyện trên tập con **14k ảnh** (~12% COCO) nên chưa đủ để hội tụ `mAP` cao trên `val2017` (M8 đánh giá trước khi hoàn tất Epoch 3–5).
+- Chạy **CPU-only** (~3–5 giờ/epoch với `batch_size=4`), kế hoạch thực tế giới hạn **5 epochs** để phù hợp tài nguyên phần cứng; độ phân giải đầu vào cố định $512 \times 512$.
 
 ## Docs
 
