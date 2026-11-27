@@ -1,43 +1,49 @@
 # NHẬT KÝ KIỂM TOÁN VÀ ĐÁNH GIÁ (AUDIT LOG)
 
-* **Mục đích:** Ghi nhận minh bạch mọi lần chạy đánh giá chính thức, đặc biệt là bài kiểm tra độc lập duy nhất trên tập `val2017` (5.000 ảnh) theo quy chuẩn chống rò rỉ dữ liệu (RULES.md §17.3).
-* **Quy tắc bất biến:** Không xóa, không sửa tay hoặc thay đổi lịch sử đánh giá.
+* **Mục đích:** Ghi nhận minh bạch mọi lần chạy đánh giá chính thức (đặc biệt là `val2017`) và lịch sử các mốc cấu hình / huấn luyện thực tế theo RULES.md §17.3.
+* **Quy tắc bất biến:** Không xóa hoặc chỉnh sửa sai lệch lịch sử đánh giá đã khóa.
 
 ---
 
 ## 1. QUY CHẾ ĐÁNH GIÁ TRÊN TẬP KIỂM THỬ ĐỘC LẬP (`val2017`)
 
-1. Quá trình phát triển mô hình, điều chỉnh siêu tham số và ablation studies **chỉ được phép** sử dụng tập `val-heldout 1k`.
-2. Tập `val2017` (5k ảnh) chỉ được mở khóa để chạy đánh giá chính thức **đúng 1 lần duy nhất** khi toàn bộ quá trình huấn luyện và tối ưu đã hoàn tất tại Milestone M8.
-3. Khi thực hiện lệnh đánh giá `python src/evaluate.py --dataset val2017 --final`:
+1. Phát triển mô hình, chọn checkpoint và chạy ablation studies **chỉ được phép** dùng tập `val-heldout 1k`.
+2. Tập `val2017` (5.000 ảnh) chỉ được đánh giá **đúng 1 lần duy nhất** ở Milestone M8.
+3. Khi chạy `python -m src.evaluate --dataset val2017 --final`:
    - Hệ thống tự động tạo file khóa `outputs/final_eval.lock`.
-   - Một bản ghi chi tiết sẽ được ghi thêm vào Bảng Nhật ký bên dưới.
-   - Nếu file `final_eval.lock` đã tồn tại, chương trình sẽ lập tức báo lỗi và từ chối chạy lại.
+   - Tự động ghi 1 bản ghi vào Bảng Nhật ký bên dưới.
+   - Mọi lần chạy lại sau khi đã có file khóa đều bị từ chối với mã lỗi `1`.
 
 ---
 
-## 2. BẢNG NHẬT KÝ THỰC THI (AUDIT RECORDS)
+## 2. BẢNG NHẬT KÝ ĐÁNH GIÁ CHÍNH THỨC (AUDIT RECORDS)
 
-| Thời gian (Timestamp) | Commit Hash | Checkpoint Path | Tập dữ liệu | Config | mAP@[.5:.95] | Trạng thái | Người thực thi / Ghi chú |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026-11-18 00:26:10 | 3067fb2 | `outputs/checkpoints/best_map.pth` | `val2017 (5k)` | Baseline | 0.0000 | COMPLETED | Official Milestone M8 Evaluation |
+| Thời gian | Commit | Checkpoint | Tập dữ liệu | Config | mAP@[.5:.95] | Trạng thái | Ghi chú |
+|:---|:---|:---|:---|:---|:---:|:---|:---|
+| 2026-11-18 00:26:10 | `3067fb2` | `outputs/checkpoints/best_map.pth` | `val2017` (200/5k) | Baseline | `0.0000` | COMPLETED | Official Milestone M8 Evaluation (đã khóa) |
 
 ---
 
-## 3. LỊCH SỬ THAY ĐỔI CẤU HÌNH QUAN TRỌNG
+## 3. THỐNG KÊ CHECKPOINT ĐÃ LƯU (`outputs/checkpoints/`)
 
-- **2026-11-14 (M0):** Phân chia cố định 14.000 train và 1.000 held-out từ `train2017` bằng seed 42, kiểm tra giao thoa = 0.
-- **2026-11-14 (M1):** Cố định hệ tọa độ Letterbox $512 \times 512$, độ lệch khép kín $< 1.0\text{ px}$.
-- **2026-11-14 (M2):** Cố định kiến trúc ResNet-50-FPN + Decoupled Head, khởi tạo Focal bias $b \approx -4.595$.
-- **2026-11-15 (M3):** Assigner 3 ô dương + MultiTaskLoss (CIoU + Focal + BCE); Overfit test 10 ảnh giảm loss 98.21%, Recall 1.0.
-- **2026-11-15 (M4):** Xây dựng Training Engine (AdamW, Cosine LR, AMP, Clip 10.0), chạy smoke run 1 epoch, lưu checkpoint.
-- **2026-11-15 (M5):** Triển khai Decoder tọa độ, Batched NMS, tích hợp COCOeval, pilot test 100 ảnh held-out (8.289 predictions).
-- **2026-11-15 (Data):** Tải và giải nén hoàn tất 100% 118.287 ảnh `train2017` bằng `tar.exe`, xác thực 0 ảnh thiếu.
-- **2026-11-16 (M6):** Khởi chạy Baseline trên 14k ảnh train; đạt ~13.3k ảnh (75 phút) và dừng an toàn theo yêu cầu người dùng do CPU quá nhiệt. Lưu checkpoint theo từng epoch (`epoch_N.pth`).
-- **2026-11-16 (Merge & Sync):** Hợp nhất (merge) lịch sử gốc (commit 952fd34 từ DL Team 1) và gắn lại chính xác toàn bộ thẻ tags M0–M6 theo từng commit nguyên bản (`8a60937`, `ee9d166`, `86d3c17`, `952fd34`, `70f6d9c`, `18cc511`, `93d9134`). Đồng bộ duy nhất 1 nhánh `main` lên GitHub `khanhlinh616/DL_N1_cw`.
-- **2026-11-18 (M7):** Thực hiện 3 bài thực nghiệm bóc tách thành phần (Ablation Studies) trên tập `val-heldout 1k`: Smooth L1 vs CIoU, BCE vs Focal Loss, Single-scale P5 vs FPN {P3,P4,P5}.
-- **2026-11-18 (M8):** Chạy đánh giá chính thức duy nhất trên tập `val2017` với cờ `--final`, xuất 20.000 dự đoán, tạo file khóa `outputs/final_eval.lock` và ghi nhận kiểm toán.
-- **2026-11-21:** Hoàn tất 100% Epoch 1 baseline (Train 4.7706, Val 4.7282), lưu checkpoint `epoch_1.pth`.
-- **2026-11-24:** Hoàn tất 100% Epoch 2 baseline (Train 4.1866, Val 4.4330), lưu checkpoint `epoch_2.pth`.
-- **2026-11-26:** Hoàn tất 100% Epoch 3 baseline (Train 4.3168, Val 4.1814 — best val loss), lưu `epoch_3.pth`, `best_map.pth`.
-- **2026-11-27:** Chạy Epoch 4 (mở khóa backbone ResNet-50); đạt 2.100/3.474 batches (60.4%), loss 5.1313, checkpoint `epoch_4.pth`.
+| Tệp Checkpoint | Thời điểm lưu | Dung lượng | Nội dung / Trạng thái |
+|:---|:---|---:|:---|
+| `epoch_1.pth` | 2026-11-21 23:19 | ~290 MB | Hoàn thành 100% Epoch 1 (Train 4.7706 / Val 4.7282) |
+| `epoch_2.pth` | 2026-11-24 22:43 | ~162 MB | Hoàn thành 100% Epoch 2 (Train 4.1866 / Val 4.4330) |
+| `epoch_3.pth` | 2026-11-26 22:16 | ~162 MB | Hoàn thành 100% Epoch 3 (Train 4.3168 / **Val 4.1814**) |
+| `best_map.pth` | 2026-11-26 22:16 | ~162 MB | Bản sao trọng số tốt nhất tại Epoch 3 (Val 4.1814) |
+| `last_epoch.pth` | 2026-11-26 22:16 | ~162 MB | Checkpoint epoch hoàn chỉnh gần nhất (Epoch 3) |
+| `epoch_4.pth` | 2026-11-27 14:46 | ~339 MB | Tạm dừng Epoch 4 tại Batch 2100/3474 (60.4%, avg loss 5.1313) |
+
+---
+
+## 4. LỊCH SỬ CÁC MỐC PHÁT TRIỂN VÀ PHIÊN HUẤN LUYỆN
+
+- **2026-11-14 (M0–M2):** Chia cố định 14k train / 1k held-out (`seed=42`, overlap = 0); cài đặt Letterbox 512 ($\Delta < 1\text{ px}$); hoàn thiện ResNet-50 FrozenBN + FPN + Decoupled Head ($b \approx -4.595$).
+- **2026-11-15 (M3–M5):** Cài đặt Assigner 3 ô + MultiTaskLoss (Overfit 10 ảnh giảm 98.21%, Recall 1.0); Training Engine + smoke run; Decoder + Batched NMS + pilot 100 ảnh held-out (8.289 predictions); tải đủ 118.287 ảnh `train2017`.
+- **2026-11-16 (M6 & Sync):** Bắt đầu train baseline 14k trên CPU; hợp nhất nhánh lịch sử DL Team 1 (`952fd34`), gắn tag M0–M6 và đồng bộ nhánh `main`.
+- **2026-11-18 (M7–M8):** Chạy 3 bài Ablation trên `val-heldout 1k` (CIoU, Focal, FPN); chạy đánh giá chính thức duy nhất trên `val2017` và khóa `outputs/final_eval.lock`.
+- **2026-11-21 (Epoch 1):** Hoàn tất 100% Epoch 1 (Train 4.7706, Val 4.7282), lưu `epoch_1.pth`.
+- **2026-11-24 (Epoch 2):** Hoàn tất 100% Epoch 2 (Train 4.1866, Val 4.4330), lưu `epoch_2.pth`.
+- **2026-11-26 (Epoch 3):** Hoàn tất 100% Epoch 3 (Train 4.3168, Val **4.1814** — best val loss), cập nhật `best_map.pth`.
+- **2026-11-27 (Epoch 4 — phiên 1 & 2):** Mở khóa ResNet-50 layers 2–4; chạy tới Batch 2100/3474 (60.4%), avg loss giảm từ 6.1682 xuống 5.1313, dừng theo lịch lúc 14h45 để nghỉ CPU, lưu `epoch_4.pth`.

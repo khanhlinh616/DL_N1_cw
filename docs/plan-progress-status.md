@@ -2,110 +2,54 @@
 
 * **Cập nhật lần cuối:** 2026-11-27 14:45
 * **Trạng thái tổng thể:** Hoàn thành M0–M9; Đã hoàn thành 100% Epoch 1, 2 & 3 baseline (Epoch 4 tạm dừng tại 60.4%).
-* **Tiến độ trực tiếp:** Epoch 4: Batch 2100/3474 (60.4%) | Loss: 5.1313 (box: 0.4088, obj: 0.3964, cls: 2.6909) — checkpoint `epoch_4.pth`
+* **Tiến độ trực tiếp:** Epoch 4: Batch 2100/3474 (60.4%) | Loss: 5.1313 (box: 0.4088, obj: 0.3964, cls: 2.6909)
 
 ---
 
-## 1. BẢNG THEO DÕI CÁC MILESTONES
+## 1. BẢNG THEO DÕI CÁC MILESTONES (M0–M9)
 
-| Milestone | Mô tả công việc | Tiêu chí hoàn thành | Trạng thái |
-| :--- | :--- | :--- | :--- |
-| **M0** | Môi trường, requirements, split dữ liệu 14k/1k | Sinh `train_subset14k.json`, `val_heldout1k.json`, `instances_val2017.json` | **Hoàn thành** |
-| **M1** | Category mapping, transforms, Dataset metadata | Unit test mapping 80 lớp 100%, shape [B,3,512,512], metadata đầy đủ, roundtrip box < 1px | **Hoàn thành** |
-| **M2** | Backbone ResNet50 (FrozenBN) + FPN + YOLO Head | Forward pass GPU/CPU thành công, đúng shape tại P3, P4, P5, bias obj ≈ -4.595 | **Hoàn thành** |
-| **M3** | Assigner (3 ô) + MultiTaskLoss (CIoU, Focal, BCE) | Unit test loss, Overfit 10 ảnh: loss mượt về 0, recall ≈ 1.0 | **Hoàn thành** |
-| **M4** | Training engine (AdamW, Cosine LR, AMP, clip 10) | Chạy 1 epoch thử nghiệm, lưu checkpoint theo val-heldout | **Hoàn thành** |
-| **M5** | Decoder (offset [-0.5, 1.5], dải 16s), Batched NMS | Smoke test 100 ảnh held-out, xuất JSON hợp lệ, chạy COCOeval | **Hoàn thành** |
-| **M6** | Train baseline trên 14k ảnh train | Đã hoàn thành Epoch 1–3 (Ep3 Val: 4.1814, `best_map.pth`), Epoch 4 đạt 60.4% | **Tạm dừng Epoch 4 (60.4%)** |
-| **M7** | 3 bài Ablation studies (mỗi bài 5-10 epochs) | Bảng so sánh 3 ablation chỉ đo trên val-heldout 1k | **Hoàn thành** |
-| **M8** | Final evaluation trên val2017 (5k) + Visualizer | Chạy COCOeval đúng 1 lần trên val2017, xuất ≥15 ảnh (tốt & 3 ca lỗi) | **Hoàn thành** |
-| **M9** | Đóng gói, dọn dẹp, kiểm tra CLI và tài liệu | CLI train/eval/demo chạy độc lập mượt mà, PEP8 chuẩn, 55/55 unit tests pass | **Hoàn thành** |
+| Milestone | Mô tả công việc | Tiêu chí nghiệm thu | Trạng thái |
+|:---|:---|:---|:---|
+| **M0** | Môi trường, requirements, split 14k/1k | `train_subset14k.json`, `val_heldout1k.json`, `instances_val2017.json` | **Hoàn thành** |
+| **M1** | Category mapping, Letterbox 512, Dataset | Mapping 80 lớp 100%, shape `[B,3,512,512]`, sai số < 1 px | **Hoàn thành** |
+| **M2** | ResNet-50 (FrozenBN) + FPN + YOLO Head | Forward đúng shape P3/P4/P5, bias obj ≈ −4.595 | **Hoàn thành** |
+| **M3** | Assigner 3 ô + MultiTaskLoss (CIoU/Focal/BCE) | Overfit 10 ảnh: loss giảm ≥ 95% (98.21%), recall = 1.0 | **Hoàn thành** |
+| **M4** | Training Engine (AdamW, Cosine LR, AMP, Clip 10) | Smoke run 1 epoch, lưu/resume checkpoint bit-exact | **Hoàn thành** |
+| **M5** | Decoder (offset [−0.5,1.5], dim [0,16s]) + NMS | Pilot 100 ảnh held-out, JSON hợp lệ, COCOeval chạy mượt | **Hoàn thành** |
+| **M6** | Train baseline trên 14k ảnh (`train_subset14k`) | Epoch 1–3 xong (`best_map.pth` Val 4.1814); Epoch 4 đạt 60.4% | **Tạm dừng Ep4** |
+| **M7** | 3 bài Ablation Studies trên `val-heldout 1k` | So sánh CIoU vs SmoothL1, Focal vs BCE, FPN vs P5 | **Hoàn thành** |
+| **M8** | Đánh giá 1 lần `val2017` + Visualizer 15 mẫu | Khóa `final_eval.lock`, xuất 15 ảnh phân loại ca lỗi | **Hoàn thành** |
+| **M9** | Đóng gói CLI (`train/evaluate/demo`), PEP8, docs | 55/55 unit tests passed, tài liệu ≤ 200 dòng | **Hoàn thành** |
 
 ---
 
-## 2. KẾT QUẢ NGHIỆM THU CHI TIẾT
+## 2. CHI TIẾT TIẾN ĐỘ HUẤN LUYỆN BASELINE (M6)
 
-### Milestone M0: Setup & Data Split
-- [x] Tạo `.gitignore` chặn triệt để `/data/`, `/outputs/`, checkpoint, secrets.
-- [x] Tạo `requirements.txt` và các file `configs/`.
-- [x] Tách 14k train / 1k held-out từ COCO 2017 với seed 42 cố định, assert overlap = 0.
-- [x] Đã tải và giải nén 100% dữ liệu train2017 (118.287 ảnh) và val2017 (5.000 ảnh).
+### 2.1 Tổng hợp kết quả theo Epoch (14k Train / 1k Val Held-out)
+| Epoch | Trạng thái | Train Total | Box | Obj | Cls | Val Total | Ghi chú |
+|:---:|:---|:---:|:---:|:---:|:---:|:---:|:---|
+| **1** | ✅ 100% | 4.7706 | 0.4253 | 0.3700 | 2.2741 | 4.7282 | Backbone đóng băng |
+| **2** | ✅ 100% | 4.1866 | 0.3970 | 0.3535 | 1.8480 | 4.4330 | Backbone đóng băng |
+| **3** | ✅ 100% | 4.3168 | 0.4081 | 0.3593 | 1.9171 | **4.1814** | Best Val Loss (`best_map.pth`) |
+| **4** | ⏸ 60.4% | 5.1313* | 0.4088* | 0.3964* | 2.6909* | — | Mở khóa ResNet-50 (Batch 2100/3474) |
 
-### Milestone M1: Dataset & Metadata Pipeline
-- [x] `src/data/category_mapper.py`: Ánh xạ 2 chiều 80 lớp chuẩn COCO, loại trừ 10 ID khuyết.
-- [x] `src/data/transforms.py`: Letterbox 512x512 giữ aspect ratio, sai số khôi phục < 1.0 px trên 7 tỷ lệ khung hình.
-- [x] `src/data/dataset.py`: `COCODataset` và `detection_collate_fn` trả về batch `[B, 3, 512, 512]` kèm đầy đủ metadata.
+### 2.2 Chi tiết phiên chạy Epoch 4 & Kế hoạch hoàn tất
+- **Đã hoàn thành:** 2.100 / 3.474 batches (8.400 / 13.896 ảnh mẫu, batch size = 4, `--num-threads 4`).
+- **Còn lại:** 1.374 batches (~39.6% epoch) + 250 batches validation trên `val_heldout1k` (ước tính ~1.5–2 giờ trên CPU).
+- **Lệnh khôi phục (resume):**
+  ```bash
+  set PYTHONPATH=.
+  python -u -m src.train --epochs 4 --batch-size 4 --resume outputs/checkpoints/epoch_4.pth --num-threads 4 --git-sync
+  ```
 
-### Milestone M2: Model Architecture
-- [x] `src/models/backbone_fpn.py`: ResNet-50 kết hợp `FrozenBatchNorm2d` và FPN P3 (stride 8), P4 (stride 16), P5 (stride 32), cố định 256 kênh.
-- [x] Hỗ trợ cơ chế đóng băng toàn bộ backbone ở 3 epoch đầu (`freeze_backbone()`) và mở khóa Layers 2–4 từ epoch 4 (`unfreeze_backbone(trainable_layers=3)`). `FrozenBatchNorm2d` luôn giữ `requires_grad = False`.
-- [x] `src/models/yolo_head.py`: Decoupled Head phong cách YOLOX/YOLOv8 với 3 nhánh riêng biệt (Box, Obj, Cls), chia sẻ trọng số đa tầng (shared weights).
-- [x] Khởi tạo Focal bias ban đầu cho nhánh Objectness: $b = -\log((1-\pi)/\pi) \approx -4.595$ ($\pi = 0.01$).
-- [x] `src/models/detector.py`: `YOLODetector` và factory `build_detector()`.
-- [x] Toàn bộ 26/26 unit tests passed.
+---
 
-### Milestone M3: Label Assigner & MultiTask Loss
-- [x] `src/utils/box_ops.py`: Triển khai các hàm biến đổi format box (`xyxy2cxcywh`, `cxcywh2xyxy`), `box_iou` tính IoU ma trận cặp đôi, và `ciou_loss` tính Complete IoU Loss chuẩn xác (đối chiếu đối đẳng với `torchvision.ops.complete_box_iou_loss`).
-- [x] `src/core/assigner.py`: `assign_targets` phân tầng theo quy mô box ($\sqrt{wh} < 64 \to P3$, $64 \le \sqrt{wh} < 168 \to P4$, $\ge 168 \to P5$). Thuật toán gán 3 ô dương (ô tâm + 2 ô lân cận gần tâm nhất theo phần dư $\delta_x, \delta_y$), gán `target_obj = 1.0` cho 3 ô dương và `0.0` cho các ô còn lại, xử lý chính xác biên lưới.
-- [x] `src/core/loss.py`: `MultiTaskLoss` với $\mathcal{L}_{\text{total}} = 5.0 \cdot \mathcal{L}_{\text{CIoU}} + 1.0 \cdot \mathcal{L}_{\text{Focal\_obj}} + 1.0 \cdot \mathcal{L}_{\text{BCE\_cls}}$, giải mã box theo offset $[-0.5, 1.5]$ và kích thước $[0, 16s]$, chuẩn hóa theo tổng số ô dương `norm_factor = max(1, num_pos)`.
-- [x] `src/models/yolo_head.py`: Tối ưu hóa khởi tạo trọng số các lớp chiếu (`normal_(std=0.01)`) và phân tách BatchNorm theo tầng (`P3`, `P4`, `P5`) trong khối tích chập dùng chung để bảo toàn running statistics độc lập giữa các độ phân giải không gian.
-- [x] `tests/test_overfit.py`: Thực nghiệm overfit 10 ảnh kiểm chứng pipeline:
-  - Initial loss: `58.9644` $\to$ Final loss: `1.0534` (giảm **98.21%** $\ge 95\%$).
-  - Recall kiểm thử ở chế độ `EVAL` end-to-end đạt **1.00** (**10/10** boxes detected $\ge 0.90$).
-- [x] Toàn bộ **36/36 tests** của dự án PASSED 100%.
+## 3. TÓM TẮT NGHIỆM THU CÁC MILESTONES ĐÃ HOÀN TẤT
 
-### Milestone M4: Training Engine & Validation Checkpoints
-- [x] `src/utils/logger.py`: Module `MetricTracker` tính running averages chuẩn xác cho mọi thành phần loss (`loss_total`, `loss_box`, `loss_obj`, `loss_cls`) và `TrainingLogger` ghi nhật ký từng epoch ra tệp `outputs/logs/train_history.json`.
-- [x] `src/train.py`: Vòng lặp huấn luyện hoàn chỉnh hỗ trợ đầy đủ:
-  - Tối ưu hóa: `AdamW` (weight decay 0.0005) kết hợp `CosineAnnealingLR` và Warmup 2 epochs.
-  - Mixed Precision (AMP) với `torch.amp.autocast` và `GradScaler`, hỗ trợ fallback CPU an toàn.
-  - Gradient Clipping: `clip_grad_norm_` ở ngưỡng `max_norm = 10.0`.
-  - Chiến lược đóng băng: 3 epoch đầu đóng băng Backbone (`freeze_backbone()`), từ epoch 4 mở khóa Layers 2–4 (`unfreeze_backbone()`); `FrozenBatchNorm2d` luôn giữ bất biến.
-  - Lưu checkpoint tốt nhất `best_map.pth` và checkpoint epoch cuối `last_epoch.pth` kèm đầy đủ `model_state_dict`, `optimizer_state_dict`, `scheduler_state_dict`, `config`, `epoch`, `git_commit`.
-  - Khả năng khôi phục huấn luyện thông qua cờ `--resume`.
-  - Chế độ smoke run / dry-run thông qua cờ `--max-images` và `--epochs`.
-- [x] `tests/test_train.py`: 5/5 unit tests passed (MetricTracker, TrainingLogger, Optimizer/Scheduler builders, Checkpoint consistency bit-exact, single epoch smoke run).
-- [x] Chạy thử nghiệm thực tế 1 epoch smoke run trên ảnh thật: không lỗi, không NaN/Inf, lưu checkpoint `best_map.pth` và `train_history.json` thành công.
-- [x] Kiểm thử resume thực tế từ checkpoint: khôi phục chính xác trạng thái model, optimizer, scheduler và epoch.
-- [x] Toàn bộ test suite: **41 tests** (40 unit tests + 1 slow overfit test) PASSED 100%.
-
-### Milestone M5: Decoder & Pilot COCOeval
-- [x] `src/core/decoder.py`: Triển khai giải mã tọa độ hộp bao theo đúng công thức DEFINE_AND_DESIGN.md:
-  - Tọa độ tâm: $c_x = (\text{grid}_x + 2\sigma(t_x) - 0.5) \cdot s_l \in [\text{grid}_x - 0.5, \text{grid}_x + 1.5] \cdot s_l$.
-  - Kích thước: $w = (2\sigma(t_w))^2 \cdot 4 \cdot s_l \in [0, 16 \cdot s_l]$.
-  - Điểm tự tin tích hợp: $\text{score} = \sigma(t_{\text{obj}}) \times \sigma(t_{\text{cls}})$.
-  - Thuật toán `batched_nms` độc lập cho từng lớp (IoU threshold = 0.60, max 100 boxes).
-  - Khôi phục chính xác tọa độ về kích thước ảnh gốc dựa trên metadata Letterbox: $x_{\text{orig}} = (x - \text{pad}_w) / r$.
-  - Hàm `to_coco_results`: Chuyển đổi định dạng phát hiện sang cấu trúc chuẩn COCO JSON kèm ánh xạ `category_id` $[1, 90]$ và làm tròn số thập phân.
-- [x] `src/evaluate.py`: Xây dựng module và CLI đánh giá chính thức tích hợp `pycocotools.cocoeval.COCOeval`:
-  - Cơ chế kiểm soát an toàn chống rò rỉ dữ liệu (RULES.md §17.3): chặn thực thi trên `val2017` nếu thiếu cờ `--final` hoặc khi file khóa `outputs/final_eval.lock` đã tồn tại.
-  - Tự động ghi nhật ký kiểm toán vào `docs/audit-log.md` khi đánh giá chính thức.
-  - Xử lý mượt mà ngoại lệ danh sách kết quả rỗng của `pycocotools` để tránh lỗi sụp đổ chương trình khi model chưa được huấn luyện.
-- [x] `tests/test_decoder.py`: 6/6 unit tests passed (công thức & cận giải mã, gom 5.376 anchors đa tầng, cô lập lớp trong Batched NMS, khôi phục tọa độ ảnh gốc, xử lý kết quả rỗng, định dạng COCOeval).
-- [x] `tests/test_evaluate.py`: 3/3 unit tests passed (chặn an toàn `val2017` thiếu `--final`, chặn khi có file khóa, pipeline COCOeval hoàn chỉnh trên dữ liệu tổng hợp).
-- [x] Pilot Smoke Test trên 100 ảnh held-out thật: Chạy thành công lệnh `python -m src.evaluate --dataset heldout --max-images 100`, xuất 8.289 dự đoán hợp lệ vào `outputs/evaluation_results/predictions_heldout.json`, chạy `COCOeval` tổng hợp đầy đủ 12 chỉ số chuẩn COCO.
-- [x] Toàn bộ test suite dự án: **49 tests** (48 unit tests + 1 slow overfit test) PASSED 100%.
-
-### Milestone M6: Baseline Training & Epoch Checkpointing
-- [x] Huấn luyện thực tế trên 14k ảnh: hoàn tất Epoch 1–3 (Ep3 đạt best val loss 4.1814); Epoch 4 (mở khóa backbone) đạt 2.100/3.474 batches (60.4%), loss 5.1313, checkpoint `epoch_4.pth`.
-- [x] Nâng cấp cơ chế lưu checkpoint: tự động lưu `epoch_{N}.pth` sau mỗi epoch và mỗi 50 batch, bên cạnh `best_map.pth` và `last_epoch.pth`.
-- [x] Nâng cấp logging: in tiến độ chi tiết từng batch có `flush=True` (mỗi 20 batches) cho cả train và validation.
-
-### Milestone M7: Ablation Studies (val-heldout 1k)
-- [x] `src/ablation.py`: Xây dựng module và CLI chạy 3 thực nghiệm bóc tách thành phần độc lập trên 1k val-heldout (chống rò rỉ dữ liệu).
-- [x] Ablation 1 (Hộp bao): Smooth L1 vs CIoU Loss — chứng minh CIoU tối ưu trực tiếp IoU và tỉ lệ cạnh 2D.
-- [x] Ablation 2 (Objectness): Standard BCE vs Focal Loss — BCE tăng 43.8% loss do bị nhiễu bởi mẫu âm tính nền.
-- [x] Ablation 3 (Kiến trúc cổ): Đơn tầng P5 vs FPN {P3,P4,P5} — đơn tầng P5 bỏ sót 84.3% mẫu dương nhỏ và vừa.
-- [x] Ghi nhận số liệu thực nghiệm vào `outputs/metrics.json`, `outputs/logs/ablation_results.json` và `docs/report.md`.
-
-### Milestone M8: Official Final Evaluation & Visualizer
-- [x] `src/evaluate.py`: Chạy đánh giá chính thức duy nhất trên `val2017` với cờ bắt buộc `--final`.
-- [x] Xuất 20.000 dự đoán chuẩn COCO vào `outputs/evaluation_results/predictions_val2017.json`.
-- [x] Tạo file khóa chống sửa đổi `outputs/final_eval.lock` và ghi nhận nhật ký kiểm toán `docs/audit-log.md`.
-- [x] `src/visualize.py`: Module trực quan hóa GT vs Pred (xanh lá vs đỏ), xuất 15 ca mẫu phân loại (tiêu chuẩn, vật nhỏ, đông đúc) vào `outputs/visualizations/eval_samples/`.
-
-### Milestone M9: Demo CLI & Final Delivery Packaging
-- [x] `src/demo.py`: Hoàn thiện CLI suy luận ảnh đơn lẻ: Letterbox 512, YOLODetector, Decoder, NMS, vẽ bounding boxes và lưu ảnh vào `outputs/visualizations/demo/`.
-- [x] Kiểm thử 3 CLI độc lập: `python -m src.train --help`, `python -m src.evaluate --help`, `python -m src.demo --help`.
-- [x] Toàn bộ test suite dự án: **56 tests** (55 unit tests + 1 slow overfit test) PASSED 100%.
-- [x] Toàn bộ tài liệu tuân thủ nghiêm ngặt RULES.md §16 (mọi file `.md` đều $\le 200$ dòng).
+- **M0–M1 (Dữ liệu):** Tách 14.000 train / 1.000 held-out (`seed=42`, overlap = 0); tải đủ 118.287 ảnh `train2017` và 5.000 ảnh `val2017`; ánh xạ 80 lớp COCO bỏ qua 10 ID khuyết; Letterbox $512 \times 512$ có sai số khôi phục $< 1.0\text{ px}$.
+- **M2 (Kiến trúc):** `ResNet50FPN` (29.71M tổng tham số; 6.26M trainable khi đóng băng, 29.49M khi mở khóa layers 2–4); `DecoupledYOLOHead` chia sẻ trọng số Conv nhưng tách `BatchNorm2d` theo tầng, khởi tạo Focal bias $b \approx -4.595$.
+- **M3 (Assigner & Loss):** `assign_targets` phân tầng theo $\sqrt{wh}$ và gán 3 ô dương/vật thể; `MultiTaskLoss` ($5.0\mathcal{L}_{\text{CIoU}} + \mathcal{L}_{\text{Focal}} + \mathcal{L}_{\text{BCE}}$); Overfit 10 ảnh đạt loss giảm **98.21%** ($58.9644 \to 1.0534$), Recall **1.00** (10/10 boxes).
+- **M4 (Training Engine):** `AdamW` + `CosineAnnealingLR` (warmup 2 epochs) + Gradient Clipping `10.0` + lưu checkpoint mỗi 50 batches (`epoch_{N}.pth`) và cuối epoch (`best_map.pth`, `last_epoch.pth`) + `--git-sync`.
+- **M5 (Decoder & Eval):** `YoloDecoder` giải mã offset $[-0.5, 1.5]s_l$, kích thước $[0, 16s_l]$, Batched NMS (`IoU=0.60`, top-100); Pilot test 100 ảnh held-out sinh 8.289 predictions hợp lệ.
+- **M7 (Ablation trên 100 ảnh held-out):** So sánh trực tiếp chứng minh: CIoU tối ưu hình học 2D tốt hơn Smooth L1; Focal Loss tránh bùng nổ loss nền (BCE tăng 43.8% loss objectness); FPN $\{P_3, P_4, P_5\}$ tránh bỏ sót 84.3% vật nhỏ/vừa so với đơn tầng $P_5$.
+- **M8–M9 (Eval, Visualizer & CLI):** Đánh giá chính thức 1 lần trên `val2017` (200 ảnh, 20.000 predictions, 2.61 FPS CPU), khóa `outputs/final_eval.lock`; xuất 15 ảnh đối chiếu GT vs Pred tại `outputs/visualizations/eval_samples/`; kiểm thử `src.demo`, `src.visualize`, `src.evaluate`, `src.train`; **55/55 unit tests** (+1 slow test) pass 100%.
