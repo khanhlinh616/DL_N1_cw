@@ -59,13 +59,13 @@ flowchart TD
     A["COCO 2017"] --> B["Letterbox 512 + metadata (r, pad, image_id, orig_size)"]
     B --> C["ResNet-50 (FrozenBN) -> FPN: P3 s8 / P4 s16 / P5 s32 (256ch)"]
     C --> F["Shared Decoupled Head -> logits P3 64x64 / P4 32x32 / P5 16x16 (4+1+80)"]
-    B -.->|GT| H["AnchorFreeAssigner (tâm + 2 ô lân cận)"]
+    B -.->|GT| H["assign_targets (tâm + 2 ô lân cận)"]
     F & H --> J["MultiTaskLoss (CIoU + Focal_obj + BCE_cls) -> AdamW + Cosine LR; best ckpt theo val-heldout 1k"]
     F --> L["YoloDecoder -> score>0.05 -> Batched NMS (IoU 0.60, top 100) -> khôi phục tọa độ gốc, class_idx -> category_id"]
     L --> O["COCOeval (1 lần trên val2017) | Visualizer (ca tốt + 3 ca lỗi)"]
 ```
 #### 2.1.2 Thư viện vs. tự viết
-* **`torchvision`:** `resnet50(weights=...)`, `ops.FeaturePyramidNetwork`, `ops.nms`. **Tự viết:** `YoloDecoupledHead` (chia sẻ trọng số), Focal Bias Init, `AnchorFreeAssigner` (dải $[-0.5,1.5]$), `MultiTaskLoss`, `YoloDecoder` (offset, kích thước $[0,16s_l]$, score, Batched NMS, khôi phục tọa độ).
+* **`torchvision`:** `resnet50(weights=...)`, `ops.FeaturePyramidNetwork`, `ops.nms`. **Tự viết:** `DecoupledYOLOHead` (chia sẻ trọng số), Focal Bias Init, `assign_targets` (dải $[-0.5,1.5]$), `MultiTaskLoss`, `YoloDecoder` (offset, kích thước $[0,16s_l]$, score, Batched NMS, khôi phục tọa độ).
 #### 2.1.3 Cấu trúc Head và khởi tạo
 * **Decoupled Head:** đầu vào chung $1\times1$ Conv→BN→SiLU (256→256). Mỗi nhánh: 2 lớp $3\times3$ Conv(256) → $1\times1$ Conv; Box → 4 ($t_x,t_y,t_w,t_h$); Obj → 1; Cls → 80.
 * **Focal Bias (nhánh Obj):** $b=-\log\frac{1-\pi}{\pi}\approx-4.595$ ($\pi=0.01$), để $\sigma(b)\approx0.01$ ngay bước đầu, tránh bùng nổ loss.
@@ -86,16 +86,16 @@ flowchart TD
 | Utils | `src/utils/` | Box ops (CIoU, xywh↔xyxy), YAML, logger | — |
 ### 2.3 Folder Structure
 ```text
-cw_nhom1/
+DL_N1_cw/
 ├── configs/    base_config.yaml, dataset_coco_subset.yaml, model_resnet50_fpn.yaml   |  notebooks/: 01_data_exploration, 02_inference_inspection
 ├── data/coco/  annotations/, train2017/, val2017/, zips/, train_subset14k.json, val_heldout1k.json   (.gitignore)
 ├── docs/       DEFINE_AND_DESIGN, report, data, model, training, evaluation, demo, ai-usage, plan-progress-status, audit-log (.md, mỗi file < 200 dòng, RULES §16)
-├── outputs/    checkpoints/ (best_map.pth, last_epoch.pth), evaluation_results/, logs/, visualizations/   (.gitignore)
+├── outputs/    checkpoints/ (best_map.pth, last_epoch.pth, epoch_N.pth), evaluation_results/, logs/, visualizations/, final_eval.lock   (.gitignore)
 ├── src/        core/ (assigner, decoder, loss), data/ (category_mapper, dataset, download_data, transforms),
 │               models/ (backbone_fpn, detector, yolo_head), utils/ (box_ops, config, logger),
-│               train.py, evaluate.py (cờ --final), visualize.py, demo.py
+│               train.py, evaluate.py (cờ --final), visualize.py, demo.py, ablation.py
 ├── tests/      test_assigner, test_box_ops, test_category_mapper, test_dataset, test_data_split, test_decoder,
-│               test_loss, test_model_forward, test_overfit, test_transforms, verify_split
+│               test_demo, test_evaluate, test_loss, test_model_forward, test_overfit, test_train, test_transforms, test_visualize, verify_split
 └── README.md, requirements.txt, RULES.md, .gitignore
 ```
 ### 2.4 Data Flow
@@ -108,7 +108,7 @@ cw_nhom1/
 3. **Logits → box (Decoder):** $\hat c_x=(i+2\sigma(t_x)-0.5)s_l$, $\hat c_y=(j+2\sigma(t_y)-0.5)s_l$; $\hat w=(2\sigma(t_w))^2\cdot4s_l$, $\hat h=(2\sigma(t_h))^2\cdot4s_l$. Dải kích thước: $P_3$ $[0,128]$ px (vật $\sqrt{wh}<64$); $P_4$ $[0,256]$ (64–168); $P_5$ $[0,512]$ (≥168, phủ cả ảnh).
 4. **Về ảnh gốc:** $\hat x_{1,2}=(\hat c_x\mp\hat w/2-\text{pad}_w)/r$, $\hat y_{1,2}=(\hat c_y\mp\hat h/2-\text{pad}_h)/r$; clip vào $[0,W_{orig}]$, $[0,H_{orig}]$.
 #### 2.4.4 Ánh xạ danh mục
-* COCO có 80 lớp, ID 1–90; 10 ID khuyết `[12,26,29,30,45,66,68,69,71,83]`. `category_id_to_class_idx`: → $[0,79]$ khi nạp dữ liệu; `class_idx_to_category_id`: $[0,79]\to[1,90]$ khi xuất JSON cho `COCOeval`.
+* COCO có 80 lớp, ID 1–90; 10 ID khuyết `[12,26,29,30,45,66,68,69,71,83]`. `coco_to_model`: → $[0,79]$ khi nạp dữ liệu; `model_to_coco`: $[0,79]\to[1,90]$ khi xuất JSON cho `COCOeval`.
 ### 2.5 Interfaces / APIs
 #### 2.5.1 Chữ ký hàm chính
 ```python
