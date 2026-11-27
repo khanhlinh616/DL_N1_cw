@@ -90,6 +90,17 @@ python -m pytest -m "not slow"   # 55 unit tests nhanh (55/55 passed)
 python -m pytest                 # Bao gồm 1 slow overfit test 10 ảnh (~2 phút)
 ```
 
+## Milestones Status (M0–M9)
+
+| Mốc | Nội dung chính | Trạng thái |
+|:---|:---|:---|
+| **M0–M1** | Split 14k/1k (`seed=42`), Category mapping 80 lớp, Letterbox $512^2$ ($\Delta < 1$ px) | ✅ Hoàn thành |
+| **M2–M3** | ResNet-50 (FrozenBN) + FPN + Decoupled Head; Assigner 3 ô + MultiTaskLoss (Overfit 98.21%) | ✅ Hoàn thành |
+| **M4–M5** | Training Engine (`AdamW`, Cosine LR, resume, `--git-sync`); Decoder + Batched NMS + Pilot 100 ảnh | ✅ Hoàn thành |
+| **M6** | Baseline 14k (kế hoạch 5 epochs CPU): Ep1–3 xong (`best_map.pth` Val 4.1814), Ep4 đạt 60.4% | ⏸ Tạm dừng Ep4 |
+| **M7** | 3 bài Ablation Studies trên `val-heldout 1k` (CIoU, Focal Loss, FPN) | ✅ Hoàn thành |
+| **M8–M9** | Final Eval `val2017` (khóa `final_eval.lock`), Visualizer 15 mẫu, CLI & 55/55 unit tests | ✅ Hoàn thành |
+
 ## Checkpoint Status & Results
 
 ### Trạng thái Checkpoint hiện tại (`outputs/checkpoints/`)
