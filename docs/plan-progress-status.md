@@ -1,8 +1,8 @@
 # TIẾN ĐỘ THỰC HIỆN DỰ ÁN (PLAN & PROGRESS STATUS)
 
-* **Cập nhật lần cuối:** 2026-11-28 14:10
+* **Cập nhật lần cuối:** 2026-11-28 14:22
 * **Trạng thái tổng thể:** Hoàn thành M0–M9; Đã hoàn thành 100% Epoch 1, Epoch 2 & Epoch 3 baseline.
-* **Tiến độ trực tiếp:** Epoch 4: Batch 1500/1737 (86.4%) | Loss: nan (box: nan, obj: nan, cls: nan)
+* **Tiến độ trực tiếp:** Epoch 4: Batch 500/1737 (28.8%) | Loss: 4.3796 (box: 0.4126, obj: 0.3596, cls: 1.9571)
 
 ---
 
