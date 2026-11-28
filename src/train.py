@@ -152,7 +152,7 @@ def _sync_git_epoch_completed(epoch_num: int, train_metrics: Dict[str, float], v
         metrics_file = Path("outputs/metrics.json")
         if metrics_file.exists():
             try:
-                m_data = json.loads(metrics_file.read_text(encoding="utf-8"))
+                m_data = json.loads(metrics_file.read_text(encoding="utf-8-sig"))
                 if "baseline_m6" in m_data:
                     m_data["baseline_m6"]["epoch"] = epoch_num
                     m_data["baseline_m6"]["total_epochs"] = epoch_num

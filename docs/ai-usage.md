@@ -102,7 +102,7 @@
 - **Mục đích prompt:** Cài đặt module bóc tách `src/ablation.py` hỗ trợ các biến thể hàm loss (Smooth L1 vs CIoU, Standard BCE vs Focal Loss, Đơn tầng P5 vs FPN {P3,P4,P5}) và thực thi đo lường khách quan trên tập `val-heldout 1k`.
 - **Đóng góp của sinh viên:** Yêu cầu tuân thủ nguyên tắc không rò rỉ dữ liệu (RULES.md §17.3), chỉ chạy ablation trên held-out.
 - **Thành phần AI sinh ra / tinh chỉnh:** `src/core/loss.py` (hỗ trợ `box_loss_type`, `obj_loss_type`), `src/ablation.py`, `tests/test_loss.py`.
-- **Kiểm chứng:** Đo lường thực tế trên 100 ảnh held-out: CIoU tối ưu hình học tốt hơn Smooth L1, BCE tăng loss 43.8% do nhiễu mẫu âm tính, đơn tầng P5 bỏ sót 84.3% mẫu dương nhỏ/vừa. Cập nhật `outputs/metrics.json` và `docs/report.md`.
+- **Kiểm chứng:** Đo lường thực tế trên 100 ảnh held-out: CIoU tối ưu hình học tốt hơn Smooth L1 (`425.08` vs `422.35`), BCE tăng 43.8% loss total (`611.34`, loss obj `596.12`) do nhiễu mẫu âm tính, đơn tầng P5 (`25.14`, chỉ xét 256/5.376 ô lưới) bỏ sót vật nhỏ/vừa ở P3/P4. Cập nhật `outputs/metrics.json` và `docs/report.md`.
 
 ---
 

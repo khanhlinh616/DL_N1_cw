@@ -67,10 +67,10 @@ $env:PYTHONPATH="."   # PowerShell (Windows) | CMD: set PYTHONPATH=.
 ```bash
 set PYTHONPATH=.
 
-# Huấn luyện: smoke test / baseline 5 epochs / resume Epoch 4 với giới hạn 4 luồng CPU
-python -m src.train --epochs 1 --batch-size 2 --max-images 8
-python -m src.train --epochs 5 --batch-size 4 --num-threads 4 --git-sync
-python -u -m src.train --epochs 5 --batch-size 4 --resume outputs/checkpoints/epoch_4.pth --num-threads 4 --git-sync
+# Huấn luyện: smoke test / baseline 20 epochs GPU (batch 8, AMP FP16) / resume
+.venv\Scripts\python.exe -m src.train --epochs 1 --batch-size 2 --max-images 8
+.venv\Scripts\python.exe -u -m src.train --epochs 20 --batch-size 8 --device cuda --git-sync
+.venv\Scripts\python.exe -u -m src.train --epochs 20 --batch-size 8 --device cuda --resume outputs/checkpoints/last_epoch.pth --git-sync
 
 # Đánh giá nội bộ (held-out 1k) & đánh giá chính thức (val2017 — đã khóa sau M8)
 python -m src.evaluate --dataset heldout --batch-size 8
@@ -97,40 +97,37 @@ python -m pytest                 # Bao gồm 1 slow overfit test 10 ảnh (~2 ph
 | **M0–M1** | Split 14k/1k (`seed=42`), Category mapping 80 lớp, Letterbox $512^2$ ($\Delta < 1$ px) | ✅ Hoàn thành |
 | **M2–M3** | ResNet-50 (FrozenBN) + FPN + Decoupled Head; Assigner 3 ô + MultiTaskLoss (Overfit 98.21%) | ✅ Hoàn thành |
 | **M4–M5** | Training Engine (`AdamW`, Cosine LR, resume, `--git-sync`); Decoder + Batched NMS + Pilot 100 ảnh | ✅ Hoàn thành |
-| **M6** | Baseline 14k (kế hoạch 5 epochs CPU): Ep1–3 xong (`best_map.pth` Val 4.1814), Ep4 đạt 60.4% | ⏸ Tạm dừng Ep4 |
+| **M6** | Baseline 14k (3 epochs CPU): Ep1–3 hoàn thành, `best_map.pth` Val Loss **4.1814** (Epoch 3) | ✅ Hoàn thành |
 | **M7** | 3 bài Ablation Studies trên `val-heldout 1k` (CIoU, Focal Loss, FPN) | ✅ Hoàn thành |
 | **M8–M9** | Final Eval `val2017` (khóa `final_eval.lock`), Visualizer 15 mẫu, CLI & 55/55 unit tests | ✅ Hoàn thành |
 
 ## Checkpoint Status & Results
 
 ### Trạng thái Checkpoint hiện tại (`outputs/checkpoints/`)
-- `best_map.pth` / `epoch_3.pth` / `last_epoch.pth`: Lưu tại **Epoch 3** (Val Loss tốt nhất: **4.1814**).
-- `epoch_4.pth`: Tạm dừng **Epoch 4** tại Batch **2100/3474** (60.4%, lúc 14:45 ngày 27/11/2026), còn 1.374 batches cuối Epoch 4 + Epoch 5 theo kế hoạch **5 epochs**.
+- `best_map.pth` / `epoch_3.pth` / `last_epoch.pth`: Lưu tại **Epoch 3** (Val Loss tốt nhất: **4.1814**). M6 hoàn thành.
+- `epoch_1.pth`, `epoch_2.pth`, `epoch_3.pth`: Đầy đủ 3 checkpoints hoàn chỉnh.
 
 ### M3 — Overfit Test (10 ảnh, 40 bước, CPU)
 | Initial Loss | Final Loss | Mức giảm Loss | Recall @ IoU 0.9 |
 |:---:|:---:|:---:|:---:|
 | 58.9644 | 1.0534 | **98.21%** | **1.00** (10/10 boxes) |
 
-### M6 — Baseline Training (Mục tiêu 5 Epochs, 14k Train / 1k Val Held-out, CPU)
+### M6 — Baseline Training (14k Train / 1k Val Held-out, CPU)
 | Epoch | Backbone | Train Loss | Val Loss (1k) | Trạng thái |
 |:---:|:---|:---:|:---:|:---|
 | 1 | Frozen | 4.7706 | 4.7282 | ✅ Hoàn thành (`epoch_1.pth`) |
 | 2 | Frozen | 4.1866 | 4.4330 | ✅ Hoàn thành (`epoch_2.pth`) |
 | 3 | Frozen | 4.3168 | **4.1814** | ✅ Hoàn thành (`epoch_3.pth`, `best_map.pth`) |
-| 4 | Unfrozen (L2–4) | 5.1313* | — | ⏸ Tạm dừng Batch 2100/3474 (60.4%, `epoch_4.pth`) |
-| 5 | Unfrozen (L2–4) | — | — | ⏳ Kế hoạch chạy tiếp sau khi xong Epoch 4 |
-
-> \*Avg loss của Epoch 4 tính đến Batch 2100 (giảm từ 6.1682 sau khi mở khóa backbone).
+| 4 | Unfrozen (L2–4) | 5.1313* | — | ⏸ Tạm dừng Batch 2100/3474 (`epoch_4.pth`) |
 
 ### M7 — Ablation Study (100 ảnh held-out) & M8 — Final Eval (`val2017`, đã khóa)
-- **M7 Ablation:** Full Pipeline (`425.08`) vs Smooth L1 (`422.35`, kém khớp hình học 2D) vs BCE (`611.34`, tăng 43.8% loss nền) vs Single-scale P5 (`25.14`, bỏ sót 84.3% vật nhỏ/vừa).
+- **M7 Ablation:** Full Pipeline (`425.08`) vs Smooth L1 (`422.35`, thiếu hình học 2D) vs BCE (`611.34`, tăng 43.8% loss total) vs Single-scale P5 (`25.14`, chỉ xét 256/5.376 ô P5). Xem biểu đồ tại `outputs/visualizations/metrics/m7_ablation_comparison.png`.
 - **M8 Final Eval (`outputs/final_eval.lock`):** 200 ảnh / 20.000 predictions — `mAP@[.50:.95] = 0.0`, `AP_large = 0.0001`, `AR@100 = 0.0004`, tốc độ **2.61 FPS (CPU)**.
 
 ## Limitations
 
-- Huấn luyện trên tập con **14k ảnh** (~12% COCO) nên chưa đủ để hội tụ `mAP` cao trên `val2017` (M8 đánh giá trước khi hoàn tất Epoch 3–5).
-- Chạy **CPU-only** (~3–5 giờ/epoch với `batch_size=4`), kế hoạch thực tế giới hạn **5 epochs** để phù hợp tài nguyên phần cứng; độ phân giải đầu vào cố định $512 \times 512$.
+- Huấn luyện trên tập con **14k ảnh** (~12% COCO) nên chưa đủ để hội tụ `mAP` cao trên `val2017` (M8 đánh giá tại Epoch 3).
+- Chạy trên GPU **RTX 3050 6GB** (`batch_size=8` + AMP FP16) với độ phân giải cố định $512 \times 512$ để tối ưu VRAM 6 GB (trước đây thử nghiệm CPU-only ở `batch_size=4`).
 
 ## Docs
 

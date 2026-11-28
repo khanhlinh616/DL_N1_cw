@@ -35,13 +35,13 @@ $$\mathcal{L}_{\text{total}} = \lambda_{\text{box}} \mathcal{L}_{\text{CIoU}} + 
 
 ## 3. SIÊU THAM SỐ VÀ LỊCH TRÌNH HUẤN LUYỆN (`src/train.py`)
 
-| Tham số | Giá trị (`base_config.yaml`) | Ghi chú thực tế (CPU-only) |
+| Tham số | Giá trị (`base_config.yaml`) | Ghi chú thực tế (GPU RTX 3050 6GB + AMP) |
 |:---|:---|:---|
 | **Optimizer** | `AdamW` ($\text{lr} = 10^{-3}$, `weight_decay = 5e-4`, `betas=[0.9, 0.999]`) | Hội tụ ổn định hơn SGD ở bước đầu |
 | **LR Scheduler** | `CosineAnnealingLR` ($\text{lr}_{\min} = 10^{-5}$) + Warmup 2 epochs | `warmup_bias_lr = 1e-4` |
-| **Batch Size / Epochs** | Config mặc định 16 / 20 epochs | Kế hoạch CPU-only chạy **5 epochs** với `--batch-size 4 --num-threads 4` (3.474 batch/epoch) |
+| **Batch Size / Epochs** | Config mặc định 16 / **20 epochs** | Chạy đủ **20 epochs** trên GPU RTX 3050 (`--batch-size 8 --device cuda`, 1.737 batch/epoch; trước đó thử nghiệm 3.5 ep trên CPU `batch=4`) |
 | **Gradient Clipping** | `max_norm = 10.0` | Chống bùng nổ gradient khi mở khóa backbone |
-| **Mixed Precision** | `torch.amp.autocast` + `GradScaler` | Tự động fallback về FP32 an toàn trên CPU |
+| **Mixed Precision** | `torch.amp.autocast` + `GradScaler` | Bật FP16 AMP trên CUDA giúp tiết kiệm VRAM 6 GB |
 | **Backbone Freeze** | Đóng băng 3 epoch đầu; mở khóa `layer2–4` từ Epoch 4 | `FrozenBatchNorm2d` luôn bất biến |
 
 ---
@@ -68,9 +68,9 @@ $$\mathcal{L}_{\text{total}} = \lambda_{\text{box}} \mathcal{L}_{\text{CIoU}} + 
 ```bash
 set PYTHONPATH=.
 
-# Resume từ Epoch 4 và chạy tiếp đến hết Epoch 5 (giới hạn 4 luồng CPU)
-python -u -m src.train --epochs 5 --batch-size 4 --resume outputs/checkpoints/epoch_4.pth --num-threads 4 --git-sync
+# Huấn luyện đủ 20 epochs trên GPU (RTX 3050 6GB, AMP FP16)
+.venv\Scripts\python.exe -u -m src.train --epochs 20 --batch-size 8 --device cuda --git-sync
 
 # Smoke test nhanh pipeline
-python -m src.train --epochs 1 --batch-size 2 --max-images 8
+.venv\Scripts\python.exe -m src.train --epochs 1 --batch-size 2 --max-images 8
 ```

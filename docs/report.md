@@ -1,7 +1,7 @@
 # BÁO CÁO DỰ ÁN (PROJECT REPORT)
 
 * **Dự án:** One-Stage Object Detector (YOLO-style Head trên COCO 2017)
-* **Cập nhật lần cuối:** 2026-11-27
+* **Cập nhật lần cuối:** 2026-11-28
 
 > [!NOTE]
 > Tuân thủ RULES.md §17.4: Mọi số liệu thực nghiệm trong báo cáo này được trích xuất trực tiếp từ `outputs/metrics.json` và `outputs/logs/`, tuyệt đối không suy diễn hoặc điền số liệu chưa đo.
@@ -74,11 +74,15 @@ Ví dụ minh họa định dạng (không phải số đo thực nghiệm):
 - **Initial loss:** `58.9644` $\to$ **Final loss:** `1.0534` (giảm **98.21%** $\ge 95\%$ ✅).
 - **Recall @ IoU 0.9:** **1.00** (`10/10` boxes detected ở chế độ `eval()`).
 
-### 3.2 Baseline Training (M6 — 14.000 ảnh Train / 1.000 ảnh Val Held-out)
+### 3.2 Pilot Evaluation (M5 — 100 ảnh Val Held-out)
+- **Mục tiêu:** Kiểm chứng pipeline `YoloDecoder` + Batched NMS + `COCOeval` trước khi train baseline M6.
+- **Kết quả lịch sử (`outputs/metrics.json` → `pilot_eval_m5`):** Chạy 100 ảnh `val-heldout 1k`, xuất **8.289 predictions** hợp lệ định dạng COCO, `mAP@[.50:.95] = 0.0` (đúng kỳ vọng khi model chưa huấn luyện). Minh chứng chạy lại độc lập lưu tại `outputs/evaluation_results/m5_smoke_100/`.
 
-| Chỉ số | Epoch 1 | Epoch 2 | Epoch 3 | Epoch 4 (đang chạy) |
+### 3.3 Baseline Training (M6 — 14.000 ảnh Train / 1.000 ảnh Val Held-out)
+
+| Chỉ số | Epoch 1 | Epoch 2 | Epoch 3 | Epoch 4 |
 |:---|:---:|:---:|:---:|:---:|
-| Trạng thái | ✅ Hoàn tất | ✅ Hoàn tất | ✅ Hoàn tất | ⏸ Tạm dừng Batch 2100/3474 (60.4%) |
+| Trạng thái | ✅ Hoàn thành | ✅ Hoàn thành | ✅ Hoàn thành | ⏸ Tạm dừng Batch 2100/3474 (60.4%) |
 | Train Loss Total | 4.7706 | **4.1866** | 4.3168 | 5.1313* (unfreeze L2–4) |
 | - Box (CIoU) | 0.4253 | **0.3970** | 0.4081 | 0.4088* |
 | - Obj (Focal) | 0.3700 | **0.3535** | 0.3593 | 0.3964* |
@@ -86,18 +90,20 @@ Ví dụ minh họa định dạng (không phải số đo thực nghiệm):
 | Val Loss Total (1k) | 4.7282 | 4.4330 | **4.1814** | — |
 | Checkpoint | `epoch_1.pth` | `epoch_2.pth` | `epoch_3.pth`, `best_map.pth` | `epoch_4.pth` |
 
-> \*Trong Epoch 4, sau khi mở khóa ResNet-50 layers 2–4, loss khởi đầu tăng tạm thời lên 6.1682 rồi giảm dần về 5.1313 tại batch 2100.
+> \*Epoch 4 mở khóa ResNet-50 layers 2–4, loss tăng tạm thời lên 6.1682 rồi giảm về 5.1313 tại batch 2100. Xem biểu đồ và ma trận 12 chỉ số COCO tại [`docs/epoch-matrix.md`](file:///d:/cw/docs/epoch-matrix.md).
 
-### 3.3 Ablation Studies (M7 — 100 ảnh Val Held-out)
+### 3.4 Ablation Studies (M7 — 100 ảnh Val Held-out)
 
-| Cấu hình thực nghiệm | Loss Total | Loss Box | Loss Obj | Kết luận kỹ thuật |
-|:---|:---:|:---:|:---:|:---|
-| **Baseline** (CIoU + Focal + FPN) | 425.08 | 0.6243 | 409.86 | Chuẩn đối sánh toàn phần |
-| **Ablation 1:** Smooth L1 thay CIoU | 422.35 | 0.0791 | 409.86 | CIoU phản ánh đúng hình học 2D & tỷ lệ cạnh |
-| **Ablation 2:** BCE thay Focal (obj) | 611.34 | 0.6243 | 596.12 | BCE tăng 43.8% loss do bị nhiễu bởi mẫu âm nền |
-| **Ablation 3:** Đơn tầng P5 thay FPN | 25.14 | 1.3166 | 1.1480 | Bỏ sót 84.3% vật nhỏ/vừa (chỉ dùng tầng P5) |
+![M7 Ablation Comparison](../outputs/visualizations/metrics/m7_ablation_comparison.png)
 
-### 3.4 Đánh Giá Chính Thức `val2017` (M8 — Đã Khóa)
+| Cấu hình thực nghiệm | Loss Total | Loss Box | Loss Obj | Δ Total vs Baseline | Kết luận kỹ thuật |
+|:---|:---:|:---:|:---:|:---:|:---|
+| **Baseline** (CIoU + Focal + FPN) | `425.0788` | `0.6243` | `409.8605` | `0%` (chuẩn) | Chuẩn đối sánh toàn phần |
+| **Ablation 1:** Smooth L1 thay CIoU | `422.3525` | `0.0791` | `409.8605` | `-0.6%` | Smooth L1 bỏ qua IoU 2D & tỷ lệ cạnh |
+| **Ablation 2:** BCE thay Focal (obj) | `611.3423` | — | `596.1240` | **`+43.8%`** | BCE bị áp đảo bởi mẫu âm nền (+45.4% loss Obj) |
+| **Ablation 3:** Đơn tầng P5 thay FPN | `25.1446` | — | `1.1480` | `-94.1%` | Chỉ xét 256/5.376 ô P5, bỏ sót vật nhỏ/vừa ở P3/P4 |
+
+### 3.5 Đánh Giá Chính Thức `val2017` (M8 — Đã Khóa)
 
 > Chạy 1 lần duy nhất lúc 2026-11-18 00:26:10 (commit `3067fb2`), khóa tại `outputs/final_eval.lock`.
 
@@ -113,7 +119,7 @@ Ví dụ minh họa định dạng (không phải số đo thực nghiệm):
 
 ### 4.1 Hạn Chế Hiện Tại
 1. **Quy mô tập train nhỏ:** 14.000 ảnh (~12% COCO `train2017`) khiến các lớp hiếm (<50 mẫu) khó hội tụ.
-2. **Phần cứng CPU-only:** Mỗi epoch mất ~3–5 giờ và phải chia phiên chạy để tránh quá nhiệt CPU; kế hoạch thực tế giới hạn ở **5 epochs** thay vì 20 epochs để phù hợp tài nguyên phần cứng.
+2. **Chuyển từ CPU sang GPU (RTX 3050 6GB):** Giai đoạn đầu chạy CPU mất ~3–5 giờ/epoch (`batch_size=4`); sau đó đã chuyển sang `.venv` PyTorch CUDA (`cu126` + AMP FP16) để chạy đủ **20 epochs** theo thiết kế gốc.
 3. **Độ phân giải cố định $512 \times 512$:** Vật thể rất nhỏ ($<32^2$ px) dễ mất chi tiết đặc trưng ở tầng $P_3$.
 4. **Static Assigner:** Quy tắc 3 ô cố định chưa linh hoạt theo độ tự tin dự đoán như SimOTA / TAL.
 

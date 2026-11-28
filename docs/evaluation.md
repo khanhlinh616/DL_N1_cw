@@ -35,9 +35,10 @@ Nhận logits thô từ 3 tầng FPN ($P_3, P_4, P_5$ — tổng 5.376 ô lướ
 
 ---
 
-## 3. KẾT QUẢ ĐÁNH GIÁ CHÍNH THỨC M8 (`val2017`)
+## 3. KIỂM THỬ PILOT 100 ẢNH (M5) & ĐÁNH GIÁ CHÍNH THỨC M8 (`val2017`)
 
-Thực hiện 1 lần duy nhất ở Milestone M8 (2026-11-18 00:26:10, commit `3067fb2`, 200 ảnh / 20.000 predictions):
+- **Pilot Smoke Test M5 (`outputs/metrics.json` → `pilot_eval_m5`):** Chạy `evaluate.py --dataset heldout --max-images 100` trước huấn luyện M6 → xuất **8.289 predictions** hợp lệ chuẩn COCO, `mAP@[.50:.95] = 0.0` (đúng kỳ vọng khi chưa train). Bản chạy kiểm chứng độc lập lưu tại `outputs/evaluation_results/m5_smoke_100/`.
+- **Đánh giá chính thức M8 (`val2017`):** Thực hiện 1 lần duy nhất (2026-11-18 00:26:10, commit `3067fb2`, 200 ảnh / 20.000 predictions):
 
 | Chỉ số | Giá trị | Chỉ số | Giá trị |
 |:---|:---:|:---|:---:|
@@ -51,7 +52,7 @@ Thực hiện 1 lần duy nhất ở Milestone M8 (2026-11-18 00:26:10, commit `
 
 ## 4. QUY TRÌNH CHỐNG RÒ RỈ DỮ LIỆU & LỆNH THỰC THI
 
-- Tập `val-heldout 1k` dùng cho đánh giá nội bộ trong quá trình train/ablation.
+- Tập `val-heldout 1k` dùng cho đánh giá nội bộ trong quá trình train/ablation. Xem ma trận & biểu đồ chi tiết qua từng epoch tại [`docs/epoch-matrix.md`](file:///d:/cw/docs/epoch-matrix.md).
 - Tập `val2017` bắt buộc cờ `--final`. Sau khi chạy M8, hệ thống đã tạo file khóa `outputs/final_eval.lock` và ghi nhận vào [`docs/audit-log.md`](file:///d:/cw/docs/audit-log.md) — **tuyệt đối không chạy lại** để giữ tính khách quan.
 
 ```bash
