@@ -201,10 +201,23 @@ def build_optimizer(
     lr: float = 0.001,
     weight_decay: float = 0.0005,
     betas: Tuple[float, float] = (0.9, 0.999),
+    backbone_lr_scale: float = 0.1,
 ) -> torch.optim.Optimizer:
-    """Build AdamW optimizer for model parameters."""
+    """Build AdamW optimizer with differential LR for pretrained backbone vs FPN/head."""
+    head_params = []
+    backbone_params = []
+    for name, param in model.named_parameters():
+        if name.startswith("backbone_fpn.") and not name.startswith("backbone_fpn.fpn."):
+            backbone_params.append(param)
+        else:
+            head_params.append(param)
+
+    param_groups = [{"params": head_params, "lr": lr}]
+    if backbone_params:
+        param_groups.append({"params": backbone_params, "lr": lr * backbone_lr_scale})
+
     return torch.optim.AdamW(
-        model.parameters(),
+        param_groups,
         lr=lr,
         weight_decay=weight_decay,
         betas=betas,
@@ -279,18 +292,30 @@ def load_checkpoint(
     """Load model and optimizer state from checkpoint."""
     ckpt = torch.load(checkpoint_path, map_location=device or "cpu")
     model.load_state_dict(ckpt["model_state_dict"])
+    optim_groups_changed = False
     if optimizer is not None and "optimizer_state_dict" in ckpt:
-        optimizer.load_state_dict(ckpt["optimizer_state_dict"])
-    if scheduler is not None and "scheduler_state_dict" in ckpt:
         try:
-            scheduler.load_state_dict(ckpt["scheduler_state_dict"])
-        except Exception as e:
-            print(f"[WARN] Could not restore scheduler state dict ({e}); stepping scheduler to epoch {ckpt.get('epoch', 0) + 1}.")
+            optimizer.load_state_dict(ckpt["optimizer_state_dict"])
+        except ValueError as e:
+            optim_groups_changed = True
+            print(f"[WARN] Optimizer param groups changed ({e}); keeping fresh optimizer state with differential LR.")
+    if scheduler is not None and "scheduler_state_dict" in ckpt:
+        if optim_groups_changed:
             for _ in range(ckpt.get("epoch", 0) + 1):
                 try:
                     scheduler.step()
                 except Exception:
                     pass
+        else:
+            try:
+                scheduler.load_state_dict(ckpt["scheduler_state_dict"])
+            except Exception as e:
+                print(f"[WARN] Could not restore scheduler state dict ({e}); stepping scheduler to epoch {ckpt.get('epoch', 0) + 1}.")
+                for _ in range(ckpt.get("epoch", 0) + 1):
+                    try:
+                        scheduler.step()
+                    except Exception:
+                        pass
     if scaler is not None and "scaler_state_dict" in ckpt and ckpt["scaler_state_dict"] is not None:
         scaler.load_state_dict(ckpt["scaler_state_dict"])
     return ckpt

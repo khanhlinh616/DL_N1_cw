@@ -93,6 +93,10 @@ def ciou_loss(
     if pred_boxes.numel() == 0 or target_boxes.numel() == 0:
         return torch.empty((0,), dtype=pred_boxes.dtype, device=pred_boxes.device)
 
+    # Compute geometry & atan in FP32 to avoid FP16 underflow/NaN under AMP
+    pred_boxes = pred_boxes.float()
+    target_boxes = target_boxes.float()
+
     x1, y1, x2, y2 = pred_boxes.unbind(-1)
     x1_g, y1_g, x2_g, y2_g = target_boxes.unbind(-1)
 
