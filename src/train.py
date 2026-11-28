@@ -379,8 +379,24 @@ def train_one_epoch(
 
         with torch.amp.autocast(device_type=device_type, enabled=amp_enabled):
             predictions = model(images)
-            loss_total, loss_dict = loss_fn(predictions, assigned_targets)
-            loss_scaled = loss_total / accumulate_grad_batches
+
+        # Compute loss in FP32 to prevent FP16 overflow/underflow in Focal/BCE/CIoU
+        predictions_fp32 = {
+            lvl: {k: v.float() for k, v in d.items()}
+            for lvl, d in predictions.items()
+        }
+        loss_total, loss_dict = loss_fn(predictions_fp32, assigned_targets)
+
+        if not torch.isfinite(loss_total):
+            print(
+                f"  [WARN] Non-finite loss ({loss_total.item()}) at Epoch {epoch + 1} Batch {batch_idx + 1}; skipping batch.",
+                flush=True,
+            )
+            optimizer.zero_grad()
+            del predictions, predictions_fp32, loss_total, assigned_targets, images, gt_boxes, gt_labels
+            continue
+
+        loss_scaled = loss_total / accumulate_grad_batches
 
         tracker.update_dict(loss_dict, n=bsz)
         cur_loss_val = loss_total.item()
@@ -390,7 +406,7 @@ def train_one_epoch(
         else:
             loss_scaled.backward()
 
-        del predictions, loss_scaled, loss_total, assigned_targets, images, gt_boxes, gt_labels
+        del predictions, predictions_fp32, loss_scaled, loss_total, assigned_targets, images, gt_boxes, gt_labels
 
         if (batch_idx + 1) % accumulate_grad_batches == 0 or (batch_idx + 1) == len(dataloader):
             if amp_enabled:
